@@ -125,7 +125,7 @@ struct CodisView: View {
 @available(iOS 15.0, *)
 struct CodisConfigDisplayItem: Identifiable {
     let id = UUID()
-    let configKey: CodisKey
+    let configKey: CodisKeyProtocol
     let currentValue: String
     let originalValue: CodisLimitType?  // 保存原始值用于展开显示
 
