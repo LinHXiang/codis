@@ -10,7 +10,7 @@ import Foundation
 /// Codis配置包装器支持的类型限制协议
 /// 只有实现了该协议的类型才能被CodisWrapper包装器使用
 /// 支持基本数据类型、集合类型及其NS变种，确保配置存储的类型安全
-public protocol CodisLimitType{
+public protocol CodisLimitType {
     /// 格式化配置值用于显示
     var formatValue: String { get }
 }

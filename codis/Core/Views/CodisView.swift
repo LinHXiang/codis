@@ -150,7 +150,7 @@ public struct CodisView: View {
             // 情况1: JSON数组类型 - 自定义类型数组
             if let jsonArray = jsonObject as? [Any] {
                 // 尝试将已解码的模型转换为自定义类型数组
-                if let decodedArray = try? JSONDecoder().decode(decodableType, from: data) as? [CodisCustomLimitType] {
+                if let decodedArray = decodedModel as? [any CodisCustomLimitType] {
                     return ("自定义类型数组-数量:\(decodedArray.count)", jsonArray)
                 }
                 // 如果类型转换失败，显示基础数组信息
@@ -160,7 +160,7 @@ public struct CodisView: View {
             // 情况2: JSON字典类型 - 单个自定义模型
             if let jsonDict = jsonObject as? [String: Any] {
                 // 尝试将已解码的模型转换为自定义类型
-                if let decodedModel = try? JSONDecoder().decode(decodableType, from: data) as? CodisCustomLimitType {
+                if let decodedModel = decodedModel as? (any CodisCustomLimitType) {
                     return (decodedModel.formatValue, jsonDict)
                 }
                 // 如果类型转换失败，显示字典结构信息

@@ -86,6 +86,47 @@ public class CodisManager: ObservableObject {
         }
         return keyType.find(keyString: keyString)
     }
+
+    // MARK: - 数据迁移功能
+
+    /// 将旧的UserDefaults数据迁移到Codis中
+    /// - Parameters:
+    ///   - migrationKeys: 需要迁移的key列表
+    public func migrateFromUserDefaults(_ migrationKeys: [String]) {
+
+        lock.lock()
+        defer { lock.unlock() }
+
+        var migratedCount = 0
+        var skippedCount = 0
+        var failedKeys: [String] = []
+
+        for key in migrationKeys {
+            // 如果Codis中已经有值，则跳过
+            if config[key] != nil {
+                skippedCount += 1
+                continue
+            }
+
+            // 从UserDefaults获取旧数据
+            if let oldValue = defaults.object(forKey: key) as? CodisLimitType {
+                    config[key] = oldValue
+                    migratedCount += 1
+            } else {
+                failedKeys.append(key)
+            }
+        }
+
+        // 保存迁移后的配置
+        if migratedCount > 0 {
+            defaults.set(config, forKey: Self.configKey)
+            defaults.synchronize()
+        }
+
+#if DEBUG
+        print("迁移数据进度完成,成功迁移\(migratedCount)个偏好设置,失败\(failedKeys.count)个,跳过(已有数据)\(migratedCount)个")
+#endif
+    }
 }
 
 // MARK: - Combine支持
