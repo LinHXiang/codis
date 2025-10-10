@@ -72,13 +72,6 @@ struct CodisView: View {
                         Text("\(getSetConfigCount())")
                             .foregroundColor(.secondary)
                     }
-
-                    HStack {
-                        Text("使用默认值配置数")
-                        Spacer()
-                        Text("\(getDefaultConfigCount())")
-                            .foregroundColor(.secondary)
-                    }
                 }
             }
             .listStyle(InsetGroupedListStyle())
@@ -124,13 +117,6 @@ struct CodisView: View {
     private func getSetConfigCount() -> Int {
         return CodisManager.shared.config.keys.count
     }
-
-    /// 获取使用默认值的配置数量
-    private func getDefaultConfigCount() -> Int {
-        // 由于我们现在只显示已设置的配置，这个统计需要重新设计
-        // 可以显示已设置配置中有默认值的配置数量
-        return configItems.filter { $0.hasDefaultValue }.count
-    }
 }
 
 /// 配置展示项模型
@@ -143,7 +129,6 @@ struct CodisConfigDisplayItem: Identifiable {
     var desc: String { configKey.desc }
     var detail: String { configKey.detail }
     var canEdit: Bool { configKey.canEdit }
-    var hasDefaultValue: Bool { configKey.defaultValue != nil }
 
     /// 是否可以展开显示（数组或字典类型）
     var isExpandable: Bool {
@@ -185,27 +170,14 @@ struct ConfigRowView: View {
 
                 Spacer()
 
-                // 状态标签 - 使用更紧凑的HStack+Image+Text替代Label
-                HStack(spacing: 4) {
-                    if !item.canEdit {
-                        HStack(spacing: 2) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 10))
-                            Text("只读")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundColor(.orange)
+                if !item.canEdit {
+                    HStack(spacing: 2) {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10))
+                        Text("只读")
+                            .font(.system(size: 10))
                     }
-
-                    if item.hasDefaultValue {
-                        HStack(spacing: 2) {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 10))
-                            Text("默认")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundColor(.green)
-                    }
+                    .foregroundColor(.orange)
                 }
             }
 
