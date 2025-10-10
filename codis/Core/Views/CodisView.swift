@@ -30,6 +30,10 @@ public struct CodisView: View {
         }
     }
 
+    public init() {
+        // CodisView 不需要任何参数，它会自动从 CodisManager 获取数据
+    }
+
     public var body: some View {
         NavigationView {
             List {
