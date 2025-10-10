@@ -12,20 +12,20 @@ import Combine
 /// 支持类型安全的配置管理，底层使用CodisManager进行实际存储
 /// 现在只需要传入key，默认值从key的defaultValue属性获取
 @propertyWrapper
-struct Codis<T: CodisLimitType>{
+public struct Codis<T: CodisLimitType>{
     /// 配置的key值，用于唯一标识该配置项
     let key: CodisKeyProtocol
 
     /// 使用协议枚举key初始化包装器
     /// - Parameter key: 实现了CodisKeyProtocol的配置枚举，必须提供defaultValue
-    init(key: CodisKeyProtocol) {
+    public init(key: CodisKeyProtocol) {
         self.key = key
     }
 
     /// 包装值，提供getter和setter来存取配置
     /// getter：从配置管理器获取值，如果不存在则返回key的默认值
     /// setter：将新值保存到配置管理器
-    var wrappedValue: T {
+    public var wrappedValue: T {
         get {
             // 优先从配置管理器获取值
             if let value = CodisManager.shared.getConfig(with: key) as? T {
@@ -45,7 +45,7 @@ struct Codis<T: CodisLimitType>{
     
     /// projectedValue 直接返回 CodisManager 的 Publisher
     /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
-    var projectedValue: AnyPublisher<T, Never> {
+    public var projectedValue: AnyPublisher<T, Never> {
         return CodisManager.shared.publisher(for: key, defaultValue: wrappedValue)
     }
 }

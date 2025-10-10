@@ -8,7 +8,7 @@
 import Foundation
 
 /// Codis配置Key协议，提供描述信息和Combine支持
-protocol CodisKeyProtocol {
+public protocol CodisKeyProtocol {
     /// 配置的key值
     var key: String { get }
 
