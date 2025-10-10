@@ -412,6 +412,9 @@ class ChatViewController: UIViewController {
 ```
 
 ### 使用 CodisView 配置查看器
+
+![CodisView 界面截图](./codis/CodisView_Screenshot.PNG)
+
 `CodisView` 是一个 SwiftUI 视图，用于查看和管理配置项（需要 iOS 15.0+）：
 
 ```swift
