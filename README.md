@@ -518,20 +518,30 @@ dependencies: [
     .package(url: "https://github.com/LinHXiang/codis.git", from: "1.0.0")
 ]
 ```
-
-#### 2. 本地开发引入
-如果你正在本地开发，可以使用本地路径：
-
-```swift
-dependencies: [
-    .package(path: "/path/to/your/codis/directory")
-]
-```
-
-#### 3. Xcode 集成
+#### 2. Xcode 集成
 1. 在 Xcode 中选择 `File` → `Add Package Dependencies...`
 2. 输入 GitHub 仓库地址：`https://github.com/LinHXiang/codis.git`
 3. 选择合适的版本规则，点击 `Add Package`
+
+### CocoaPods
+
+在您的 `Podfile` 文件中添加：
+
+```ruby
+pod 'Codis', :git => 'https://github.com/LinHXiang/codis.git'
+```
+
+然后运行：
+
+```bash
+pod install
+```
+
+#### CocoaPods 注意事项
+- 确保您的项目支持 iOS 13.0+
+- 需要在Podfile中添加 `use_frameworks!`
+- 安装完成后，使用 `.xcworkspace` 文件打开项目
+- 如果遇到编译问题，尝试 `pod deintegrate` 和 `pod install` 重新安装
 
 ### 手动集成
 
