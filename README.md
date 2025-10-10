@@ -10,6 +10,8 @@
 - **属性包装器**: 通过 `@propertyWrapper` 提供简洁的配置访问语法
 - **持久化存储**: 基于 UserDefaults 实现配置的本地持久化
 - **协议化设计**: 使用协议定义配置项，提高代码的可扩展性和可维护性
+- **自定义类型支持**: 支持复杂数据结构的配置存储，包括自定义类型和数组
+- **自动序列化**: 自定义类型自动进行JSON序列化和反序列化
 
 ## 版本要求说明
 
@@ -22,12 +24,15 @@
 codis/
 ├── Core/                          # 核心框架代码
 │   ├── Protocols/                 # 协议定义层
-│   │   ├── CodisKeyProtocol.swift # 配置键协议定义
-│   │   └── CodisLimitType.swift   # 配置值类型协议
+│   │   ├── CodisKeyProtocol.swift     # 配置键协议定义
+│   │   ├── CodisLimitType.swift       # 配置值类型协议
+│   │   └── CodisCustomLimitType.swift # 自定义类型协议
 │   ├── Manager/                   # 核心管理器
 │   │   └── CodisManager.swift     # 配置管理器（核心类）
 │   ├── PropertyWrapper/           # 属性包装器
-│   │   └── Codis.swift           # @Codis 属性包装器
+│   │   ├── Codis.swift           # @Codis 基础类型包装器
+│   │   ├── CodisCustom.swift     # @CodisCustom 自定义类型包装器
+│   │   └── CodisCustomArray.swift # @CodisCustomArray 自定义数组包装器
 │   └── Views/                     # 视图组件
 │       └── CodisView.swift       # 配置管理视图
 ├── CodisKey.swift                 # 配置键枚举定义（示例实现）
@@ -56,11 +61,28 @@ func addKeyType(type: CodisKeyProtocol.Type)
 func findKey(for keyString: String) -> CodisKeyProtocol?
 ```
 
-### 2. @Codis 属性包装器
-简化配置访问的语法糖：
+### 2. 属性包装器
+提供多种属性包装器，支持不同类型配置的简洁访问：
+
+#### @Codis - 基础类型配置包装器
+用于基本数据类型（String, Int, Bool, Array, Dictionary等）：
 ```swift
 @Codis(key: CodisKey.userChatInputType)
 var chatInputType: Int
+```
+
+#### @CodisCustom - 自定义类型配置包装器
+用于自定义类型，需遵循 `CodisCustomLimitType` 协议，支持自动序列化：
+```swift
+@CodisCustom(key: AppConfigKey.userSettings)
+var userSettings: UserSettings?
+```
+
+#### @CodisCustomArray - 自定义类型数组配置包装器
+用于自定义类型数组，支持自动序列化：
+```swift
+@CodisCustomArray(key: AppConfigKey.recentUsers)
+var recentUsers: [UserInfo]
 ```
 
 ### 3. CodisKeyProtocol 协议
@@ -68,13 +90,20 @@ var chatInputType: Int
 
 协议要求：
 - `key`: 配置的字符串标识符
-- `desc`: 配置描述信息
+- `desc`: 配置描述信息，用于UI展示
 - `detail`: 配置的详细说明
-- `canEdit`: 是否允许UI编辑
-- `defaultValue`: 配置的默认值
-- `find(keyString:)`: 根据字符串key查找配置键实例（新增）
+- `canEdit`: 是否可以在UI中编辑
+- `dataType`: 数据类型（CodisLimitType.Type）
+- `defaultValue`: 配置的默认值（可选值）
+- `find(keyString:)`: 静态方法，根据字符串key查找配置键实例
 
 位于 `Protocols/` 目录，是框架的规范层。
+
+**设计特点**：
+- 支持类型安全的配置键定义
+- 通过 `dataType` 属性确保配置值的类型安全
+- `defaultValue` 为可选值，允许配置项没有默认值
+- 静态方法 `find(keyString:)` 支持运行时的配置键查找
 
 ## 使用示例
 
@@ -102,19 +131,164 @@ enum AppConfigKey: String, CodisKeyProtocol {
 
     var canEdit: Bool { true }
 
-    var defaultValue: CodisLimitType {
+    var dataType: CodisLimitType.Type {
+        switch self {
+        case .themeMode: return String.self
+        case .fontSize: return Int.self
+        case .enableNotification: return Bool.self
+        }
+    }
+
+    var defaultValue: CodisLimitType? {
         switch self {
         case .themeMode: return "light"
         case .fontSize: return 16
         case .enableNotification: return true
         }
     }
+
+    static func find(keyString: String) -> AppConfigKey? {
+        return AppConfigKey(rawValue: keyString)
+    }
 }
 
 // 使用自定义配置键
 @Codis(key: AppConfigKey.themeMode)
 var themeMode: String
+
+// 使用自定义类型配置键
+@CodisCustom(key: AppConfigKey.userSettings)
+var userSettings: UserSettings?
+
+// 使用自定义类型数组配置键
+@CodisCustomArray(key: AppConfigKey.recentUsers)
+var recentUsers: [UserInfo]
 ```
+
+### 自定义类型配置支持
+Codis 提供了完整的自定义类型配置支持，适用于复杂的数据结构：
+
+#### 1. 定义自定义类型
+```swift
+// 自定义类型需要遵循 CodisCustomLimitType 协议
+struct UserSettings: CodisCustomLimitType {
+    var userId: String
+    var theme: String
+    var notifications: Bool
+
+    // 实现 CodisLimitType 协议
+    var formatValue: String {
+        return "用户设置: \\((userId), 主题: \\((theme)"
+    }
+}
+
+struct UserInfo: CodisCustomLimitType {
+    let id: String
+    let name: String
+    let avatar: String?
+
+    var formatValue: String {
+        return "用户: \\((name) (\\((id))"
+    }
+}
+```
+
+#### 2. 配置自定义类型键
+```swift
+enum AppConfigKey: String, CodisKeyProtocol {
+    case themeMode = "app_theme_mode"
+    case userSettings = "app_user_settings"
+    case recentUsers = "app_recent_users"
+
+    var key: String { rawValue }
+
+    var desc: String {
+        switch self {
+        case .themeMode: return "主题模式"
+        case .userSettings: return "用户设置"
+        case .recentUsers: return "最近用户"
+        }
+    }
+
+    var detail: String { desc }
+    var canEdit: Bool { true }
+
+    var dataType: CodisLimitType.Type {
+        switch self {
+        case .themeMode: return String.self
+        case .userSettings: return UserSettings.self
+        case .recentUsers: return [UserInfo].self
+        }
+    }
+
+    var defaultValue: CodisLimitType? {
+        switch self {
+        case .themeMode: return "light"
+        case .userSettings: return nil // 可以没有默认值
+        case .recentUsers: return [UserInfo]() // 默认为空数组
+        }
+    }
+
+    static func find(keyString: String) -> AppConfigKey? {
+        return AppConfigKey(rawValue: keyString)
+    }
+}
+```
+
+#### 3. 使用自定义类型配置
+```swift
+class UserProfileViewModel: ObservableObject {
+    @CodisCustom(key: AppConfigKey.userSettings)
+    var userSettings: UserSettings?
+
+    @CodisCustomArray(key: AppConfigKey.recentUsers)
+    var recentUsers: [UserInfo]
+
+    func updateUserSettings(_ settings: UserSettings) {
+        userSettings = settings // 自动序列化存储
+    }
+
+    func addRecentUser(_ user: UserInfo) {
+        var users = recentUsers
+        users.insert(user, at: 0)
+        users = Array(users.prefix(10)) // 只保留最近10个
+        recentUsers = users // 自动序列化存储
+    }
+}
+```
+
+#### 4. 监听自定义类型配置变化
+```swift
+class SettingsViewModel: ObservableObject {
+    @CodisCustom(key: AppConfigKey.userSettings)
+    var userSettings: UserSettings?
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        // 监听自定义类型配置变化
+        $userSettings
+            .sink { [weak self] newSettings in
+                if let settings = newSettings {
+                    print("用户设置已更新: \\((settings)")
+                    self?.applySettings(settings)
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func applySettings(_ settings: UserSettings) {
+        // 应用新的用户设置
+    }
+}
+```
+
+**自定义类型配置特点**：
+- **自动序列化**: 使用JSON编解码，无需手动处理
+- **类型安全**: 编译时类型检查，避免运行时错误
+- **响应式支持**: 支持Combine监听配置变化
+- **数组支持**: 提供专门的数组包装器，支持自定义类型数组
+- **默认值处理**: 支持nil默认值和空数组默认值
 
 ### 初始化配置管理器
 在应用启动时初始化 CodisManager 并注册配置键类型：
@@ -327,10 +501,18 @@ class ConfigViewController: UIViewController {
 
 ### 协议化设计
 - `CodisKeyProtocol`: 定义配置键的协议，任何遵循该协议的类型都可作为配置键
-- `CodisLimitType`: 定义配置值类型的协议
+- `CodisLimitType`: 定义配置值类型的协议，支持基本数据类型
+- `CodisCustomLimitType`: 定义自定义类型协议，支持复杂数据结构的自动序列化
 - 支持自定义配置类型，不依赖于具体的枚举实现
 
 **重要**: 项目中的 `CodisKey` 枚举只是协议的一个实现示例，用于演示如何使用枚举来避免key字符串重复。在实际项目中，你应该根据自己的需求创建自定义的配置键类型，只需遵循 `CodisKeyProtocol` 协议即可。
+
+协议化设计特点：
+- **类型安全**: `dataType` 属性确保配置值的类型安全，在编译时就能发现类型错误
+- **灵活性**: `defaultValue` 为可选值，允许配置项没有默认值，适用于必须显式设置的配置
+- **运行时查找**: `find(keyString:)` 静态方法支持运行时的动态配置键查找
+- **扩展性**: 协议设计允许创建任意类型的配置键，不局限于枚举实现
+- **自定义类型支持**: 通过 `CodisCustomLimitType` 协议支持复杂数据结构的配置存储
 
 ### 线程安全
 - 使用 `NSLock` 确保多线程安全
@@ -392,10 +574,10 @@ dependencies: [
 - **配置版本控制**: 支持配置回滚到历史版本
 - **变更审计**: 记录配置变更的时间、原因和操作者
 
-### 3. 数据模型支持
-- **自定义模型支持**: 支持符合 `Codable` 协议的自定义数据模型
-- **复杂数据结构**: 支持嵌套对象和数组的配置存储
+### 3. 数据模型增强
 - **模型验证**: 增加数据模型验证机制
+- **嵌套结构优化**: 支持更复杂的嵌套数据结构
+- **数据迁移**: 支持配置数据结构的版本迁移
 
 ### 4. 安全存储增强
 - **Keychain 存储支持**: 为敏感配置提供 Keychain 存储选项
