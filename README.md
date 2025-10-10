@@ -16,15 +16,16 @@
 ```
 codis/
 ├── Core/                          # 核心框架代码
-│   ├── Utils/                     # 工具类
-│   │   ├── CodisManager.swift     # 配置管理器（核心类）
+│   ├── Protocols/                 # 协议定义层
 │   │   ├── CodisKeyProtocol.swift # 配置键协议定义
 │   │   └── CodisLimitType.swift   # 配置值类型协议
+│   ├── Manager/                   # 核心管理器
+│   │   └── CodisManager.swift     # 配置管理器（核心类）
 │   ├── PropertyWrapper/           # 属性包装器
 │   │   └── Codis.swift           # @Codis 属性包装器
 │   └── Views/                     # 视图组件
 │       └── CodisView.swift       # 配置管理视图
-├── CodisKey.swift                 # 配置键枚举定义
+├── CodisKey.swift                 # 配置键枚举定义（示例实现）
 ├── AppDelegate.swift             # 应用委托
 ├── SceneDelegate.swift           # 场景委托
 └── ViewController.swift          # 主控制器
@@ -38,6 +39,8 @@ codis/
 - 基于 UserDefaults 的持久化存储
 - Combine 响应式支持
 - 线程安全的配置操作
+
+位于 `Manager/` 目录，是框架的核心功能实现。
 
 ### 2. @Codis 属性包装器
 简化配置访问的语法糖：
@@ -55,6 +58,8 @@ var chatInputType: Int
 - `detail`: 配置的详细说明
 - `canEdit`: 是否允许UI编辑
 - `defaultValue`: 配置的默认值
+
+位于 `Protocols/` 目录，是框架的规范层。
 
 ## 使用示例
 
@@ -107,70 +112,6 @@ let inputType = CodisManager.shared.getConfig(with: CodisKey.userChatInputType)
 // 使用自定义配置键
 CodisManager.shared.updateConfig(with: AppConfigKey.themeMode, value: "dark")
 let currentTheme = CodisManager.shared.getConfig(with: AppConfigKey.themeMode)
-```
-
-### 使用 CodisView 配置查看器
-`CodisView` 是一个 SwiftUI 视图，用于查看和管理配置项：
-
-```swift
-import SwiftUI
-
-struct ContentView: View {
-    var body: some View {
-        TabView {
-            // 主界面
-            MainView()
-                .tabItem {
-                    Label("首页", systemImage: "house")
-                }
-
-            // 配置管理界面
-            CodisView()
-                .tabItem {
-                    Label("配置", systemImage: "gearshape")
-                }
-        }
-    }
-}
-```
-
-#### CodisView 功能特性：
-- **只读配置展示**: 显示所有已设置的配置项
-- **搜索功能**: 支持按配置名称、描述或值进行搜索
-- **配置统计**: 显示总配置数、已设置配置数等统计信息
-- **展开查看**: 支持展开查看数组和字典类型的详细内容
-- **状态标识**:
-  - 🔒 只读配置（canEdit = false）
-  - ⭐ 有默认值的配置
-- **调试模式**: 在DEBUG模式下显示配置key字符串
-
-#### 使用示例（在UIKit中）：
-```swift
-class ConfigViewController: UIViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // 创建 SwiftUI 视图
-        let codisView = CodisView()
-
-        // 创建 hosting controller
-        let hostingController = UIHostingController(rootView: codisView)
-
-        // 添加为子视图控制器
-        addChild(hostingController)
-        view.addSubview(hostingController.view)
-        hostingController.didMove(toParent: self)
-
-        // 设置约束
-        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
-            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
-}
 ```
 
 ### 使用属性包装器
@@ -287,16 +228,69 @@ class AppConfigManager: ObservableObject {
 }
 ```
 
-## 配置项说明
+### 使用 CodisView 配置查看器
+`CodisView` 是一个 SwiftUI 视图，用于查看和管理配置项：
 
-| 配置键 | 描述 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `lastInstalledAppVersion` | 上次安装app版本 | `""` | 用于版本更新检测 |
-| `appStoreVersion` | App Store版本信息 | `""` | 缓存的App Store版本 |
-| `isFirstExperienceCount` | 首次体验流程次数 | `0` | 第4次提示购买会员 |
-| `userChatInputType` | 用户输入方式 | `0` | 0=语音, 1=键盘 |
-| `rolesCache` | 角色列表缓存 | `[]` | 角色数据缓存 |
-| `currentRoleCache` | 当前角色缓存 | `[:]` | 当前选择角色 |
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        TabView {
+            // 主界面
+            MainView()
+                .tabItem {
+                    Label("首页", systemImage: "house")
+                }
+
+            // 配置管理界面
+            CodisView()
+                .tabItem {
+                    Label("配置", systemImage: "gearshape")
+                }
+        }
+    }
+}
+```
+
+#### CodisView 功能特性：
+- **只读配置展示**: 显示所有已设置的配置项
+- **搜索功能**: 支持按配置名称、描述或值进行搜索
+- **配置统计**: 显示总配置数、已设置配置数等统计信息
+- **展开查看**: 支持展开查看数组和字典类型的详细内容
+- **状态标识**:
+  - 🔒 只读配置（canEdit = false）
+  - ⭐ 有默认值的配置
+- **调试模式**: 在DEBUG模式下显示配置key字符串
+
+#### 使用示例（在UIKit中）：
+```swift
+class ConfigViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // 创建 SwiftUI 视图
+        let codisView = CodisView()
+
+        // 创建 hosting controller
+        let hostingController = UIHostingController(rootView: codisView)
+
+        // 添加为子视图控制器
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.didMove(toParent: self)
+
+        // 设置约束
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+}
+```
 
 ## 技术特点
 
