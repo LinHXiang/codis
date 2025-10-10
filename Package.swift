@@ -26,6 +26,16 @@ let package = Package(
             name: "Codis",
             dependencies: [],
             path: "codis/Core",
+            exclude: [
+                ".DS_Store",
+                "../AppDelegate.swift",
+                "../SceneDelegate.swift",
+                "../ViewController.swift",
+                "../Info.plist",
+                "../Assets.xcassets",
+                "../Base.lproj",
+                "../CodisKey.swift"
+            ]
         ),
     ],
     swiftLanguageVersions: [.v5]
