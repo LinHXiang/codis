@@ -25,8 +25,7 @@ let package = Package(
         .target(
             name: "Codis",
             dependencies: [],
-            path: "codis",
-            sources: ["Core"]
+            path: "codis/Core",
         ),
     ],
     swiftLanguageVersions: [.v5]
