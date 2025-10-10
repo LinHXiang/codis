@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "Codis",
+    defaultLocalization: "zh",
     platforms: [
         .iOS(.v13)
     ],
