@@ -91,7 +91,7 @@ struct CodisView: View {
         // 只遍历实际存储在CodisManager中的配置项
         for (keyString, value) in CodisManager.shared.config {
             // 根据key字符串找到对应的枚举值
-            guard let configKey = CodisKey.init(rawValue: keyString) else {
+            guard let configKey = CodisManager.shared.findKey(for: keyString) else {
                 // 如果找不到对应的枚举，说明是过期的或无效的key，可以选择忽略或特殊处理
                 continue
             }

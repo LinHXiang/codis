@@ -92,4 +92,11 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return [:]
         }
     }
+
+    /// 根据字符串key查找对应的枚举值
+    /// - Parameter keyString: 配置键的字符串标识符
+    /// - Returns: 对应的枚举值，如果找不到则返回nil
+    static func find(keyString: String) -> CodisKey? {
+        return CodisKey(rawValue: keyString)
+    }
 }

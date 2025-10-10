@@ -29,6 +29,11 @@ class CodisManager: ObservableObject {
     @Published
     private(set) var config: [String: Any] = [:]
 
+    /// 已注册的配置键类型数组
+    /// 用于存储所有实现了CodisKeyProtocol的类型，支持动态查找配置键
+    /// 通过addKeyType方法添加新的配置键类型
+    private(set) var keyTypes: [CodisKeyProtocol.Type] = []
+
     /// UserDefaults实例，用于配置持久化
     private let defaults = UserDefaults.standard
 
@@ -55,6 +60,27 @@ class CodisManager: ObservableObject {
     /// - Returns: 配置值，如果配置不存在则返回nil
     func getConfig(with key: CodisKeyProtocol) -> CodisLimitType? {
         return config[key.key] as? CodisLimitType
+    }
+    
+    /// 注册配置键类型到管理器中
+    /// 注册后的类型可以用于通过字符串key查找对应的配置键实例
+    /// - Parameter keyType: 实现了CodisKeyProtocol的配置键类型
+    /// - Note: 相同的类型只会被注册一次，重复注册会被自动忽略
+    func addKeyType(type keyType: CodisKeyProtocol.Type) {
+        // 过滤类型数组是否已经包含,不包含的话才添加
+        if !keyTypes.contains(where: { $0 == keyType }) {
+            keyTypes.append(keyType)
+        }
+    }
+
+    /// 根据key字符串查找对应的配置键实例
+    /// - Parameter keyString: 配置键的字符串标识符
+    /// - Returns: 找到的配置键实例，如果找不到则返回nil
+    func findKey(for keyString: String) -> CodisKeyProtocol? {
+        guard let keyType = keyTypes.first(where: { $0.find(keyString: keyString) != nil }) else {
+            return nil
+        }
+        return keyType.find(keyString: keyString)
     }
 }
 

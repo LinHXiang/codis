@@ -39,8 +39,17 @@ codis/
 - 基于 UserDefaults 的持久化存储
 - Combine 响应式支持
 - 线程安全的配置操作
+- 配置键类型注册和管理
 
 位于 `Manager/` 目录，是框架的核心功能实现。
+
+```swift
+// 注册配置键类型（必需步骤）
+func addKeyType(type: CodisKeyProtocol.Type)
+
+// 通过字符串 key 查找配置键实例
+func findKey(for keyString: String) -> CodisKeyProtocol?
+```
 
 ### 2. @Codis 属性包装器
 简化配置访问的语法糖：
@@ -58,6 +67,7 @@ var chatInputType: Int
 - `detail`: 配置的详细说明
 - `canEdit`: 是否允许UI编辑
 - `defaultValue`: 配置的默认值
+- `find(keyString:)`: 根据字符串key查找配置键实例（新增）
 
 位于 `Protocols/` 目录，是框架的规范层。
 
@@ -99,6 +109,22 @@ enum AppConfigKey: String, CodisKeyProtocol {
 // 使用自定义配置键
 @Codis(key: AppConfigKey.themeMode)
 var themeMode: String
+```
+
+### 初始化配置管理器
+在应用启动时初始化 CodisManager 并注册配置键类型：
+
+```swift
+// 在 AppDelegate 或 SceneDelegate 中添加
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // 注册配置键类型（必需步骤）
+    CodisManager.shared.addKeyType(type: CodisKey.self)
+
+    // 如果使用自定义配置键，也需要注册
+    CodisManager.shared.addKeyType(type: AppConfigKey.self)
+
+    return true
+}
 ```
 
 ### 基本配置操作
