@@ -10,6 +10,8 @@ import Combine
 
 /// 配置列表视图（只读模式）- 直接从CodisManager获取配置数据展示
 /// 适用于调试和查看配置状态，无需修改权限的场景
+/// - 注意：此视图需要iOS 15.0+，使用了 `.searchable` 和 `.textSelection` 等API
+@available(iOS 15.0, *)
 struct CodisView: View {
 
     @State private var configItems: [CodisConfigDisplayItem] = []
@@ -120,6 +122,7 @@ struct CodisView: View {
 }
 
 /// 配置展示项模型
+@available(iOS 15.0, *)
 struct CodisConfigDisplayItem: Identifiable {
     let id = UUID()
     let configKey: CodisKey
@@ -155,6 +158,7 @@ struct CodisConfigDisplayItem: Identifiable {
 }
 
 /// 配置行视图（只读模式）
+@available(iOS 15.0, *)
 struct ConfigRowView: View {
 
     let item: CodisConfigDisplayItem

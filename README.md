@@ -11,6 +11,11 @@
 - **持久化存储**: 基于 UserDefaults 实现配置的本地持久化
 - **协议化设计**: 使用协议定义配置项，提高代码的可扩展性和可维护性
 
+## 版本要求说明
+
+- **Codis 核心库**: iOS 13.0+ (基于 Combine 框架)
+- **CodisView**: iOS 15.0+ (使用了 `.searchable` 和 `.textSelection` 等 SwiftUI API)
+
 ## 项目结构
 
 ```
@@ -255,7 +260,7 @@ class AppConfigManager: ObservableObject {
 ```
 
 ### 使用 CodisView 配置查看器
-`CodisView` 是一个 SwiftUI 视图，用于查看和管理配置项：
+`CodisView` 是一个 SwiftUI 视图，用于查看和管理配置项（需要 iOS 15.0+）：
 
 ```swift
 import SwiftUI
@@ -338,7 +343,7 @@ class ConfigViewController: UIViewController {
 
 ## 安装要求
 
-- iOS 13.0+
+- iOS 13.0+ (CodisView 需要 iOS 15.0+)
 - Swift 5.0+
 - Xcode 11.0+
 
