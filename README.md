@@ -342,6 +342,39 @@ class ConfigViewController: UIViewController {
 - Swift 5.0+
 - Xcode 11.0+
 
+## 安装方法
+
+### Swift Package Manager (推荐)
+
+#### 1. 通过 GitHub URL 引入
+在你的 `Package.swift` 文件中添加：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/LinHXiang/codis.git", from: "1.0.0")
+]
+```
+
+#### 2. 本地开发引入
+如果你正在本地开发，可以使用本地路径：
+
+```swift
+dependencies: [
+    .package(path: "/path/to/your/codis/directory")
+]
+```
+
+#### 3. Xcode 集成
+1. 在 Xcode 中选择 `File` → `Add Package Dependencies...`
+2. 输入 GitHub 仓库地址：`https://github.com/LinHXiang/codis.git`
+3. 选择合适的版本规则，点击 `Add Package`
+
+### 手动集成
+
+1. 下载源码
+2. 将 `codis/Core/` 目录下的所有文件拖入你的项目
+3. 确保添加了必要的依赖框架：`Combine`
+
 ## 未来扩展方向
 
 ### 1. 配置展示和编辑
