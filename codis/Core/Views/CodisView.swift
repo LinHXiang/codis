@@ -12,7 +12,7 @@ import Combine
 /// 适用于调试和查看配置状态，无需修改权限的场景
 /// - 注意：此视图需要iOS 15.0+，使用了 `.searchable` 和 `.textSelection` 等API
 @available(iOS 15.0, *)
-struct CodisView: View {
+public struct CodisView: View {
 
     @State private var configItems: [CodisConfigDisplayItem] = []
     @State private var searchText: String = ""
@@ -30,7 +30,7 @@ struct CodisView: View {
         }
     }
 
-    var body: some View {
+    public var body: some View {
         NavigationView {
             List {
                 // 配置项列表（只读展示）
