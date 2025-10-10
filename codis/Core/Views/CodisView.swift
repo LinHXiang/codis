@@ -243,22 +243,19 @@ struct ConfigRowView: View {
                 }
             }
 
-            // 配置key（调试用，可选显示）
-            if isDebugMode {
-                HStack {
-                    Text("Key:")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+            HStack {
+                Text("Key:")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
 
-                    Spacer()
+                Spacer()
 
-                    Text(item.configKey.key)
-                        .font(.caption2)
-                        .foregroundColor(.gray)
-                        .textSelection(.enabled)
-                }
-                .padding(.top, 2)
+                Text(item.configKey.key)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                    .textSelection(.enabled)
             }
+            .padding(.top, 2)
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle()) // 让整个区域都可点击
@@ -269,15 +266,6 @@ struct ConfigRowView: View {
                 }
             }
         }
-    }
-
-    /// 是否处于调试模式
-    private var isDebugMode: Bool {
-        #if DEBUG
-        return true
-        #else
-        return false
-        #endif
     }
 }
 

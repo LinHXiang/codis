@@ -9,6 +9,7 @@ import Foundation
 
 /// Codis配置Key协议，提供描述信息和Combine支持
 public protocol CodisKeyProtocol {
+        
     /// 配置的key值
     var key: String { get }
 
@@ -21,8 +22,11 @@ public protocol CodisKeyProtocol {
     /// 是否可以在UI中编辑
     var canEdit: Bool { get }
 
+    /// 数据类型
+    var dataType: CodisLimitType.Type { get }
+    
     /// 配置默认值
-    var defaultValue: CodisLimitType { get }
+    var defaultValue: CodisLimitType? { get }
 
     /// 寻找配置键
     /// - Parameters:

@@ -31,7 +31,7 @@ public struct Codis<T: CodisLimitType>{
             if let value = CodisManager.shared.getConfig(with: key) as? T {
                 return value
             }
-            // 如果没有设置值，使用key的默认值
+            // 如果没有设置值，使用key的默认值(基础数据类型必须赋值)
             guard let defaultValue = key.defaultValue as? T else {
                 // 如果没有默认值，返回类型默认值（这不应该发生，因为协议要求有defaultValue）
                 fatalError("配置项 \(key.key) 没有提供默认值，请确保实现了CodisKeyProtocol的defaultValue属性")
@@ -45,7 +45,7 @@ public struct Codis<T: CodisLimitType>{
     
     /// projectedValue 直接返回 CodisManager 的 Publisher
     /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
-    public var projectedValue: AnyPublisher<T, Never> {
-        return CodisManager.shared.publisher(for: key, defaultValue: wrappedValue)
+    public var projectedValue: AnyPublisher<T?, Never> {
+        return CodisManager.shared.publisher(for: key)
     }
 }

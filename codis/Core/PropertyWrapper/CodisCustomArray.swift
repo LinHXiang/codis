@@ -33,10 +33,12 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
                 return decode
             }
             // 如果没有设置值，使用key的默认值
-            guard let defaultValue = key.defaultValue as? [T] else {
-                fatalError("配置项 \(key.key) 没有提供默认值，请确保实现了CodisKeyProtocol的defaultValue属性")
+            if let defaultValue = key.defaultValue as? [T] {
+                return defaultValue
+            } else {
+                // 如果defaultValue为nil，返回空数组
+                return []
             }
-            return defaultValue
         }
         set {
             let encode = newValue.encodeArrayData()
@@ -48,8 +50,8 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
     /// 监听自定义类型数组的变化
     public var projectedValue: AnyPublisher<[T], Never> {
         // 使用现有的publisher方法监听Data变化，然后解码自定义类型数组
-        return CodisManager.shared.publisher(for: key, type: Data.self)
-            .compactMap { data in
+        return CodisManager.shared.publisherCustomClass(for: key)
+            .map { data in
                 // 尝试解码数据
                 if let data = data,
                    let decodedArray = [T].decodeArrayData(data) {
@@ -57,10 +59,12 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
                 }
 
                 // 如果没有数据，返回默认值
-                guard let defaultValue = self.key.defaultValue as? [T] else {
-                    return nil
+                if let defaultValue = self.key.defaultValue as? [T] {
+                    return defaultValue
+                } else {
+                    // 如果defaultValue为nil，返回空数组
+                    return []
                 }
-                return defaultValue
             }
             .removeDuplicates() // 避免重复发送相同的值
             .eraseToAnyPublisher()

@@ -18,10 +18,6 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     
     case userChatInputType = "userChatInputType"
     
-    case rolesCache = "rolesCache"
-    
-    case currentRoleCache = "currentRoleCache"
-
     // MARK: - CodisKeyProtocol 实现
 
     /// 获取key的字符串值
@@ -42,10 +38,6 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return "首次体验流程次数"
         case .userChatInputType:
             return "用户输入方式缓存"
-        case .rolesCache:
-            return "角色列表数据缓存"
-        case .currentRoleCache:
-            return "当前选择的角色缓存"
         }
     }
 
@@ -61,10 +53,6 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return "首次体验(开场白+1,首次发送+1,首次发音+1),第四次则提示购买会员"
         case .userChatInputType:
             return "对话页面的输入方式: 0 = .voice, 1 = .keyboard"
-        case .rolesCache:
-            return "角色列表数据缓存"
-        case .currentRoleCache:
-            return "当前选择的角色缓存"
         }
     }
 
@@ -74,9 +62,19 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
         return false
     }
 
+    /// 数据类型 - 根据配置项返回对应的类型
+    var dataType: CodisLimitType.Type {
+        switch self {
+        case .lastInstalledAppVersion, .appStoreVersion:
+            return String.self
+        case .isFirstExperienceCount, .userChatInputType:
+            return Int.self
+        }
+    }
+
     /// 配置默认值，用于在应用首次使用或重置时提供初始值
     /// - Returns: 配置的默认值，如果为nil则表示没有默认值
-    var defaultValue: CodisLimitType {
+    var defaultValue: CodisLimitType? {
         switch self {
         case .lastInstalledAppVersion:
             return ""
@@ -86,10 +84,6 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return 0
         case .userChatInputType:
             return 0
-        case .rolesCache:
-            return []
-        case .currentRoleCache:
-            return [:]
         }
     }
 

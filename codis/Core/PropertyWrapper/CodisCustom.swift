@@ -25,18 +25,15 @@ public struct CodisCustom<T: CodisCustomLimitType> {
     /// 包装值，提供getter和setter来存取配置
     /// getter：从配置管理器获取值，如果不存在则返回key的默认值
     /// setter：将新值保存到配置管理器，自动进行序列化
-    public var wrappedValue: T {
-        get {            
+    public var wrappedValue: T? {
+        get {
             // 优先从配置管理器获取自定义类型的值
             if let cacheData = CodisManager.shared.getConfig(with: key) as? Data,
                let decode = T.self.decodeData(cacheData) {
                 return decode
             }
             // 如果没有设置值，使用key的默认值
-            guard let defaultValue = key.defaultValue as? T else {
-                fatalError("配置项 \(key.key) 没有提供默认值，请确保实现了CodisKeyProtocol的defaultValue属性")
-            }
-            return defaultValue
+            return key.defaultValue as? T
         }
         set {
             let encode = T.self.encodeData(newValue)
@@ -46,10 +43,10 @@ public struct CodisCustom<T: CodisCustomLimitType> {
 
     /// projectedValue 提供 Combine Publisher
     /// 监听自定义配置类型的变化
-    public var projectedValue: AnyPublisher<T, Never> {
+    public var projectedValue: AnyPublisher<T?, Never> {
         // 使用现有的publisher方法监听Data变化，然后解码自定义类型
-        return CodisManager.shared.publisher(for: key, type: Data.self)
-            .compactMap { data in
+        return CodisManager.shared.publisherCustomClass(for: key)
+            .map { data in
                 // 尝试解码数据
                 if let data = data,
                    let decodedValue = T.decodeData(data) {
@@ -57,10 +54,7 @@ public struct CodisCustom<T: CodisCustomLimitType> {
                 }
 
                 // 如果没有数据，返回默认值
-                guard let defaultValue = self.key.defaultValue as? T else {
-                    return nil
-                }
-                return defaultValue
+                return self.key.defaultValue as? T
             }
             .removeDuplicates() // 避免重复发送相同的值
             .eraseToAnyPublisher()

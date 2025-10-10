@@ -48,7 +48,7 @@ public class CodisManager: ObservableObject {
         lock.lock()
         defer { lock.unlock() }
 
-        if let v = value {
+        if value != nil {
             config[key.key] = value
         } else {
             config.removeValue(forKey: key.key)
@@ -94,23 +94,21 @@ extension CodisManager {
     /// 监听指定key的配置变化
     /// - Parameter key: 配置key（协议类型）
     /// - Returns: 配置值的Publisher
-    public func publisher<T: CodisLimitType>(for key: CodisKeyProtocol, type: T.Type) -> AnyPublisher<T?, Never> {
+    public func publisher<T: CodisLimitType>(for key: CodisKeyProtocol) -> AnyPublisher<T?, Never> {
         return $config
             .map { config in
                 return config[key.key] as? T
             }
             .eraseToAnyPublisher()
     }
-
-    /// 监听指定key的配置变化（带默认值）
-    /// - Parameters:
-    ///   - key: 配置key（协议类型）
-    ///   - defaultValue: 默认值
+    
+    /// 监听指定key的配置变化
+    /// - Parameter key: 配置key（协议类型）
     /// - Returns: 配置值的Publisher
-    public func publisher<T: CodisLimitType>(for key: CodisKeyProtocol, defaultValue: T) -> AnyPublisher<T, Never> {
+    public func publisherCustomClass(for key: CodisKeyProtocol) -> AnyPublisher<Data?, Never> {
         return $config
             .map { config in
-                return (config[key.key] as? T) ?? defaultValue
+                return config[key.key] as? Data
             }
             .eraseToAnyPublisher()
     }
