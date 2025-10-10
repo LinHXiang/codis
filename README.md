@@ -347,7 +347,7 @@ class SettingsViewModel: ObservableObject {
 
     init() {
         // 监听配置变化（使用项目中定义的 CodisKey）
-        CodisManager.shared.publisher(for: CodisKey.userChatInputType, defaultValue: 0)
+        CodisManager.shared.publisher(for: CodisKey.userChatInputType)
             .sink { [weak self] newValue in
                 // 处理配置变化
                 self?.updateInputMode(newValue)
@@ -355,7 +355,7 @@ class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
 
         // 监听自定义配置变化（使用自定义的 AppConfigKey）
-        CodisManager.shared.publisher(for: AppConfigKey.themeMode, defaultValue: "light")
+        CodisManager.shared.publisher(for: AppConfigKey.themeMode)
             .sink { [weak self] newTheme in
                 self?.updateTheme(newTheme)
             }
@@ -407,28 +407,6 @@ class ChatViewController: UIViewController {
     func updateTheme(_ theme: String) {
         print("切换到主题: \(theme)")
         // 更新UI主题
-    }
-}
-```
-
-#### 监听多个配置变化
-```swift
-class AppConfigManager: ObservableObject {
-    private var cancellables = Set<AnyCancellable>()
-
-    @Published var currentInputType: Int = 0
-    @Published var currentRole: [String: Any] = [:]
-
-    init() {
-        // 监听输入方式变化
-        CodisManager.shared.publisher(for: CodisKey.userChatInputType, defaultValue: 0)
-            .assign(to: \.currentInputType, on: self)
-            .store(in: &cancellables)
-
-        // 监听当前角色变化
-        CodisManager.shared.publisher(for: CodisKey.currentRoleCache, defaultValue: [:])
-            .assign(to: \.currentRole, on: self)
-            .store(in: &cancellables)
     }
 }
 ```
@@ -574,17 +552,12 @@ dependencies: [
 - **配置版本控制**: 支持配置回滚到历史版本
 - **变更审计**: 记录配置变更的时间、原因和操作者
 
-### 3. 数据模型增强
-- **模型验证**: 增加数据模型验证机制
-- **嵌套结构优化**: 支持更复杂的嵌套数据结构
-- **数据迁移**: 支持配置数据结构的版本迁移
-
-### 4. 安全存储增强
+### 3. 安全存储增强
 - **Keychain 存储支持**: 为敏感配置提供 Keychain 存储选项
 - **数据加密**: 支持配置数据的加密存储
 - **生物识别保护**: 对敏感配置增加生物识别验证
 
-### 5. 高级功能
+### 4. 高级功能
 - **配置同步**: 支持 iCloud 或其他云服务的配置同步
 - **A/B 测试支持**: 为配置增加实验组和对照组功能
 - **远程配置**: 支持从远程服务器动态加载配置
