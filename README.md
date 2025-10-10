@@ -444,7 +444,6 @@ struct ContentView: View {
 - **状态标识**:
   - 🔒 只读配置（canEdit = false）
   - ⭐ 有默认值的配置
-- **调试模式**: 在DEBUG模式下显示配置key字符串
 
 #### 使用示例（在UIKit中）：
 ```swift
