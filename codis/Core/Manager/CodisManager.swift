@@ -44,11 +44,15 @@ public class CodisManager: ObservableObject {
     /// - Parameters:
     ///   - key: 实现了CodisKeyProtocol的配置枚举
     ///   - value: 新的配置值，必须实现CodisLimitType协议
-    public func updateConfig(with key: CodisKeyProtocol, value: CodisLimitType) {
+    public func updateConfig(with key: CodisKeyProtocol, value: CodisLimitType?) {
         lock.lock()
         defer { lock.unlock() }
 
-        config[key.key] = value
+        if let v = value {
+            config[key.key] = value
+        } else {
+            config.removeValue(forKey: key.key)
+        }
 
         // 持久化整个config字典
         defaults.set(config, forKey: Self.configKey)
