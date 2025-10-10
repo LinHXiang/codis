@@ -25,16 +25,16 @@ let package = Package(
         .target(
             name: "Codis",
             dependencies: [],
-            path: "codis/Core",
+            path: "codis",
             exclude: [
                 ".DS_Store",
-                "../AppDelegate.swift",
-                "../SceneDelegate.swift",
-                "../ViewController.swift",
-                "../Info.plist",
-                "../Assets.xcassets",
-                "../Base.lproj",
-                "../CodisKey.swift"
+                "AppDelegate.swift",
+                "SceneDelegate.swift",
+                "ViewController.swift",
+                "Info.plist",
+                "Assets.xcassets",
+                "Base.lproj",
+                "CodisKey.swift"
             ]
         ),
     ],
