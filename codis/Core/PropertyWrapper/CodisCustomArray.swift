@@ -28,7 +28,7 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
     public var wrappedValue: [T] {
         get {
             // 优先从配置管理器获取自定义类型数组的值
-            if let cacheData = CodisManager.shared.getConfig(with: key) as? Data,
+            if let cacheData = CodisManager.getConfig(with: key) as? Data,
                let decode = [T].decodeArrayData(cacheData) {
                 return decode
             }
@@ -42,7 +42,7 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
         }
         set {
             let encode = newValue.encodeArrayData()
-            CodisManager.shared.updateConfig(with: key, value: encode)
+            CodisManager.updateConfig(with: key, value: encode)
         }
     }
 
@@ -50,7 +50,7 @@ public struct CodisCustomArray<T: CodisCustomLimitType> {
     /// 监听自定义类型数组的变化
     public var projectedValue: AnyPublisher<[T], Never> {
         // 使用现有的publisher方法监听Data变化，然后解码自定义类型数组
-        return CodisManager.shared.publisherCustomClass(for: key)
+        return CodisManager.publisherCustomClass(for: key)
             .map { data in
                 // 尝试解码数据
                 if let data = data,

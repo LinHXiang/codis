@@ -18,16 +18,22 @@ public class CodisManager: ObservableObject {
 
     /// 单例实例，提供全局访问点
     /// 初始化时从UserDefaults加载已保存的配置数据
-    public static let shared = {
+    static let shared = {
         let shared = CodisManager()
         shared.config = UserDefaults.standard.value(forKey: configKey) as? [String: Any] ?? [:]
         return shared
     }()
+    
+    private init(){ }
 
     /// 当前配置数据的发布者，支持Combine响应式编程
     /// 当配置发生变化时，会自动通知所有订阅者
     @Published
-    private(set) var config: [String: Any] = [:]
+    private var config: [String: Any] = [:]
+    
+    public static var config: [String: Any] {
+        return shared.config
+    }
 
     /// 已注册的配置键类型数组
     /// 用于存储所有实现了CodisKeyProtocol的类型，支持动态查找配置键
@@ -44,44 +50,44 @@ public class CodisManager: ObservableObject {
     /// - Parameters:
     ///   - key: 实现了CodisKeyProtocol的配置枚举
     ///   - value: 新的配置值，必须实现CodisLimitType协议
-    public func updateConfig(with key: CodisKeyProtocol, value: CodisLimitType?) {
-        lock.lock()
-        defer { lock.unlock() }
+    public static func updateConfig(with key: CodisKeyProtocol, value: CodisLimitType?) {
+        shared.lock.lock()
+        defer { shared.lock.unlock() }
 
         if value != nil {
-            config[key.key] = value
+            shared.config[key.key] = value
         } else {
-            config.removeValue(forKey: key.key)
+            shared.config.removeValue(forKey: key.key)
         }
 
         // 持久化整个config字典
-        defaults.set(config, forKey: Self.configKey)
-        defaults.synchronize()
+        shared.defaults.set(shared.config, forKey: configKey)
+        shared.defaults.synchronize()
     }
     
     /// 获取配置值，使用协议枚举key（推荐使用）
     /// - Parameter key: 实现了CodisKeyProtocol的配置枚举
     /// - Returns: 配置值，如果配置不存在则返回nil
-    public func getConfig(with key: CodisKeyProtocol) -> CodisLimitType? {
-        return config[key.key] as? CodisLimitType
+    public static func getConfig(with key: CodisKeyProtocol) -> CodisLimitType? {
+        return shared.config[key.key] as? CodisLimitType
     }
     
     /// 注册配置键类型到管理器中
     /// 注册后的类型可以用于通过字符串key查找对应的配置键实例
     /// - Parameter keyType: 实现了CodisKeyProtocol的配置键类型
     /// - Note: 相同的类型只会被注册一次，重复注册会被自动忽略
-    public func addKeyType(type keyType: CodisKeyProtocol.Type) {
+    public static func addKeyType(type keyType: CodisKeyProtocol.Type) {
         // 过滤类型数组是否已经包含,不包含的话才添加
-        if !keyTypes.contains(where: { $0 == keyType }) {
-            keyTypes.append(keyType)
+        if !shared.keyTypes.contains(where: { $0 == keyType }) {
+            shared.keyTypes.append(keyType)
         }
     }
 
     /// 根据key字符串查找对应的配置键实例
     /// - Parameter keyString: 配置键的字符串标识符
     /// - Returns: 找到的配置键实例，如果找不到则返回nil
-    public func findKey(for keyString: String) -> CodisKeyProtocol? {
-        guard let keyType = keyTypes.first(where: { $0.find(keyString: keyString) != nil }) else {
+    public static func findKey(for keyString: String) -> CodisKeyProtocol? {
+        guard let keyType = shared.keyTypes.first(where: { $0.find(keyString: keyString) != nil }) else {
             return nil
         }
         return keyType.find(keyString: keyString)
@@ -92,10 +98,10 @@ public class CodisManager: ObservableObject {
     /// 将旧的UserDefaults数据迁移到Codis中
     /// - Parameters:
     ///   - migrationKeys: 需要迁移的key列表
-    public func migrateFromUserDefaults(_ migrationKeys: [String]) {
+    public static func migrateFromUserDefaults(_ migrationKeys: [String]) {
 
-        lock.lock()
-        defer { lock.unlock() }
+        shared.lock.lock()
+        defer { shared.lock.unlock() }
 
         var migratedCount = 0
         var skippedCount = 0
@@ -103,15 +109,15 @@ public class CodisManager: ObservableObject {
 
         for key in migrationKeys {
             // 如果Codis中已经有值，则跳过
-            if config[key] != nil {
+            if shared.config[key] != nil {
                 skippedCount += 1
                 continue
             }
 
             // 从UserDefaults获取旧数据
-            if let oldValue = defaults.object(forKey: key) as? CodisLimitType {
-                    config[key] = oldValue
-                    migratedCount += 1
+            if let oldValue = shared.defaults.object(forKey: key) as? CodisLimitType {
+                shared.config[key] = oldValue
+                migratedCount += 1
             } else {
                 failedKeys.append(key)
             }
@@ -119,8 +125,8 @@ public class CodisManager: ObservableObject {
 
         // 保存迁移后的配置
         if migratedCount > 0 {
-            defaults.set(config, forKey: Self.configKey)
-            defaults.synchronize()
+            shared.defaults.set(shared.config, forKey: configKey)
+            shared.defaults.synchronize()
         }
 
 #if DEBUG
@@ -135,8 +141,8 @@ extension CodisManager {
     /// 监听指定key的配置变化
     /// - Parameter key: 配置key（协议类型）
     /// - Returns: 配置值的Publisher
-    public func publisher<T: CodisLimitType>(for key: CodisKeyProtocol) -> AnyPublisher<T?, Never> {
-        return $config
+    public static func publisher<T: CodisLimitType>(for key: CodisKeyProtocol) -> AnyPublisher<T?, Never> {
+        return shared.$config
             .map { config in
                 return config[key.key] as? T
             }
@@ -146,8 +152,8 @@ extension CodisManager {
     /// 监听指定key的配置变化
     /// - Parameter key: 配置key（协议类型）
     /// - Returns: 配置值的Publisher
-    public func publisherCustomClass(for key: CodisKeyProtocol) -> AnyPublisher<Data?, Never> {
-        return $config
+    public static func publisherCustomClass(for key: CodisKeyProtocol) -> AnyPublisher<Data?, Never> {
+        return shared.$config
             .map { config in
                 return config[key.key] as? Data
             }

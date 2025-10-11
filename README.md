@@ -297,10 +297,10 @@ class SettingsViewModel: ObservableObject {
 // 在 AppDelegate 或 SceneDelegate 中添加
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     // 注册配置键类型（必需步骤）
-    CodisManager.shared.addKeyType(type: CodisKey.self)
+    CodisManager.addKeyType(type: CodisKey.self)
 
     // 如果使用自定义配置键，也需要注册
-    CodisManager.shared.addKeyType(type: AppConfigKey.self)
+    CodisManager.addKeyType(type: AppConfigKey.self)
 
     return true
 }
@@ -309,14 +309,14 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 ### 基本配置操作
 ```swift
 // 更新配置
-CodisManager.shared.updateConfig(with: CodisKey.userChatInputType, value: 1)
+CodisManager.updateConfig(with: CodisKey.userChatInputType, value: 1)
 
 // 获取配置
-let inputType = CodisManager.shared.getConfig(with: CodisKey.userChatInputType)
+let inputType = CodisManager.getConfig(with: CodisKey.userChatInputType)
 
 // 使用自定义配置键
-CodisManager.shared.updateConfig(with: AppConfigKey.themeMode, value: "dark")
-let currentTheme = CodisManager.shared.getConfig(with: AppConfigKey.themeMode)
+CodisManager.updateConfig(with: AppConfigKey.themeMode, value: "dark")
+let currentTheme = CodisManager.getConfig(with: AppConfigKey.themeMode)
 ```
 
 ### 使用属性包装器
@@ -340,14 +340,14 @@ class ChatViewController: UIViewController {
 
 ### 监听配置变化
 
-#### 方式一：直接监听 CodisManager 单例
+#### 方式一：直接监听 CodisManager
 ```swift
 class SettingsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init() {
         // 监听配置变化（使用项目中定义的 CodisKey）
-        CodisManager.shared.publisher(for: CodisKey.userChatInputType)
+        CodisManager.publisher(for: CodisKey.userChatInputType)
             .sink { [weak self] newValue in
                 // 处理配置变化
                 self?.updateInputMode(newValue)
@@ -355,7 +355,7 @@ class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
 
         // 监听自定义配置变化（使用自定义的 AppConfigKey）
-        CodisManager.shared.publisher(for: AppConfigKey.themeMode)
+        CodisManager.publisher(for: AppConfigKey.themeMode)
             .sink { [weak self] newTheme in
                 self?.updateTheme(newTheme)
             }

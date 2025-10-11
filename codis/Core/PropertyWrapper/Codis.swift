@@ -28,7 +28,7 @@ public struct Codis<T: CodisLimitType>{
     public var wrappedValue: T {
         get {
             // 优先从配置管理器获取值
-            if let value = CodisManager.shared.getConfig(with: key) as? T {
+            if let value = CodisManager.getConfig(with: key) as? T {
                 return value
             }
             // 如果没有设置值，使用key的默认值(基础数据类型必须赋值)
@@ -39,13 +39,13 @@ public struct Codis<T: CodisLimitType>{
             return defaultValue
         }
         set {
-            CodisManager.shared.updateConfig(with: key, value: newValue)
+            CodisManager.updateConfig(with: key, value: newValue)
         }
     }
     
     /// projectedValue 直接返回 CodisManager 的 Publisher
     /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
     public var projectedValue: AnyPublisher<T?, Never> {
-        return CodisManager.shared.publisher(for: key)
+        return CodisManager.publisher(for: key)
     }
 }

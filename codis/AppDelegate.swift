@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
 
         // 初始化Codis配置管理器，注册所有配置键类型
-        CodisManager.shared.addKeyType(type: CodisKey.self)
+        CodisManager.addKeyType(type: CodisKey.self)
 
         return true
     }

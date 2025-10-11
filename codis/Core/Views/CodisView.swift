@@ -95,9 +95,9 @@ public struct CodisView: View {
         var displayItems: [CodisConfigDisplayItem] = []
 
         // 只遍历实际存储在CodisManager中的配置项
-        for (keyString, value) in CodisManager.shared.config {
+        for (keyString, value) in CodisManager.config {
             // 根据key字符串找到对应的枚举值
-            guard let configKey = CodisManager.shared.findKey(for: keyString) else {
+            guard let configKey = CodisManager.findKey(for: keyString) else {
                 // 如果找不到对应的枚举，说明是过期的或无效的key，可以选择忽略或特殊处理
                 continue
             }
@@ -174,7 +174,7 @@ public struct CodisView: View {
 
     /// 获取已设置的配置数量
     private func getSetConfigCount() -> Int {
-        return CodisManager.shared.config.keys.count
+        return CodisManager.config.keys.count
     }
 }
 
