@@ -12,7 +12,7 @@ import Combine
 /// 支持类型安全的配置管理，底层使用CodisManager进行实际存储
 /// 现在只需要传入key，默认值从key的defaultValue属性获取
 @propertyWrapper
-public struct Codis<T: CodisLimitType>{
+public struct Codis<T: CodisBasicLimit>{
     /// 配置的key值，用于唯一标识该配置项
     let key: CodisKeyProtocol
 

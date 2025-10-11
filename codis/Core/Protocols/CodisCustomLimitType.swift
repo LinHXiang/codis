@@ -7,12 +7,13 @@
 
 import Foundation
 
-public protocol CodisCustomLimitType: CodisLimitType, Codable, Equatable {
+public protocol CodisCustomLimitType: CodisBasicLimit, Codable, Equatable {
     /// 解码数据(提取用)
     static func decodeData(_ data: Data) -> Self?
     /// 编码数据(保存用)
     static func encodeData(_ data: Self?) -> Data?
 }
+
 
 // MARK: - 数组扩展支持
 public extension Array where Element: CodisCustomLimitType {

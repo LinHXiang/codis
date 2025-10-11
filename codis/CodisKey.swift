@@ -63,7 +63,7 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     }
 
     /// 数据类型 - 根据配置项返回对应的类型
-    var dataType: CodisLimitType.Type {
+    var dataType: CodisBasicLimit.Type {
         switch self {
         case .lastInstalledAppVersion, .appStoreVersion:
             return String.self
@@ -74,7 +74,7 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
 
     /// 配置默认值，用于在应用首次使用或重置时提供初始值
     /// - Returns: 配置的默认值，如果为nil则表示没有默认值
-    var defaultValue: CodisLimitType? {
+    var defaultValue: CodisBasicLimit? {
         switch self {
         case .lastInstalledAppVersion:
             return ""

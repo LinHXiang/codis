@@ -103,7 +103,7 @@ public struct CodisView: View {
             }
 
             let displayValue: String
-            let originalValue: CodisLimitType?
+            let originalValue: CodisBasicLimit?
 
             // 检查是否是自定义类型（存储为Data，但配置类型不是Data）
             if let customDataValue = value as? Data, configKey.dataType != Data.self {
@@ -111,7 +111,7 @@ public struct CodisView: View {
                     data: customDataValue,
                     expectedType: configKey.dataType
                 )
-            } else if let limitTypeValue = value as? CodisLimitType {
+            } else if let limitTypeValue = value as? CodisBasicLimit {
                 // 基础类型，直接使用formatValue
                 displayValue = limitTypeValue.formatValue
                 originalValue = limitTypeValue
@@ -137,7 +137,7 @@ public struct CodisView: View {
     ///   - data: 存储的自定义类型数据
     ///   - expectedType: 期望的数据类型
     /// - Returns: 格式化后的显示字符串和原始值
-    private func formatCustomTypeValue(data: Data, expectedType: CodisLimitType.Type) -> (String, CodisLimitType?) {
+    private func formatCustomTypeValue(data: Data, expectedType: CodisBasicLimit.Type) -> (String, CodisBasicLimit?) {
         // 首先尝试解码数据，如果失败直接返回兜底信息
         guard let decodableType = expectedType as? Decodable.Type,
               let decodedModel = try? JSONDecoder().decode(decodableType, from: data) else {
@@ -184,7 +184,7 @@ struct CodisConfigDisplayItem: Identifiable {
     let id = UUID()
     let configKey: CodisKeyProtocol
     let currentValue: String
-    let originalValue: CodisLimitType?  // 保存原始值用于展开显示
+    let originalValue: CodisBasicLimit?  // 保存原始值用于展开显示
 
     var desc: String { configKey.desc }
     var detail: String { configKey.detail }

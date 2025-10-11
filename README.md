@@ -25,7 +25,7 @@ codis/
 ├── Core/                          # 核心框架代码
 │   ├── Protocols/                 # 协议定义层
 │   │   ├── CodisKeyProtocol.swift     # 配置键协议定义
-│   │   ├── CodisLimitType.swift       # 配置值类型协议
+│   │   ├── CodisBasicLimit.swift       # 配置值类型协议
 │   │   └── CodisCustomLimitType.swift # 自定义类型协议
 │   ├── Manager/                   # 核心管理器
 │   │   └── CodisManager.swift     # 配置管理器（核心类）
@@ -93,7 +93,7 @@ var recentUsers: [UserInfo]
 - `desc`: 配置描述信息，用于UI展示
 - `detail`: 配置的详细说明
 - `canEdit`: 是否可以在UI中编辑
-- `dataType`: 数据类型（CodisLimitType.Type）
+- `dataType`: 数据类型（CodisBasicLimit.Type）
 - `defaultValue`: 配置的默认值（可选值）
 - `find(keyString:)`: 静态方法，根据字符串key查找配置键实例
 
@@ -131,7 +131,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
 
     var canEdit: Bool { true }
 
-    var dataType: CodisLimitType.Type {
+    var dataType: CodisBasicLimit.Type {
         switch self {
         case .themeMode: return String.self
         case .fontSize: return Int.self
@@ -139,7 +139,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
         }
     }
 
-    var defaultValue: CodisLimitType? {
+    var defaultValue: CodisBasicLimit? {
         switch self {
         case .themeMode: return "light"
         case .fontSize: return 16
@@ -176,7 +176,7 @@ struct UserSettings: CodisCustomLimitType {
     var theme: String
     var notifications: Bool
 
-    // 实现 CodisLimitType 协议
+    // 实现 CodisBasicLimit 协议
     var formatValue: String {
         return "用户设置: \\((userId), 主题: \\((theme)"
     }
@@ -213,7 +213,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
     var detail: String { desc }
     var canEdit: Bool { true }
 
-    var dataType: CodisLimitType.Type {
+    var dataType: CodisBasicLimit.Type {
         switch self {
         case .themeMode: return String.self
         case .userSettings: return UserSettings.self
@@ -221,7 +221,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
         }
     }
 
-    var defaultValue: CodisLimitType? {
+    var defaultValue: CodisBasicLimit? {
         switch self {
         case .themeMode: return "light"
         case .userSettings: return nil // 可以没有默认值
@@ -481,7 +481,7 @@ class ConfigViewController: UIViewController {
 
 ### 协议化设计
 - `CodisKeyProtocol`: 定义配置键的协议，任何遵循该协议的类型都可作为配置键
-- `CodisLimitType`: 定义配置值类型的协议，支持基本数据类型
+- `CodisBasicLimit`: 定义配置值类型的协议，支持基本数据类型
 - `CodisCustomLimitType`: 定义自定义类型协议，支持复杂数据结构的自动序列化
 - 支持自定义配置类型，不依赖于具体的枚举实现
 

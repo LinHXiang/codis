@@ -49,8 +49,8 @@ public class CodisManager: ObservableObject {
     /// 更新配置值，使用协议枚举key（推荐使用）
     /// - Parameters:
     ///   - key: 实现了CodisKeyProtocol的配置枚举
-    ///   - value: 新的配置值，必须实现CodisLimitType协议
-    public static func updateConfig(with key: CodisKeyProtocol, value: CodisLimitType?) {
+    ///   - value: 新的配置值，必须实现CodisBasicLimit协议
+    public static func updateConfig(with key: CodisKeyProtocol, value: CodisBasicLimit?) {
         shared.lock.lock()
         defer { shared.lock.unlock() }
 
@@ -68,8 +68,8 @@ public class CodisManager: ObservableObject {
     /// 获取配置值，使用协议枚举key（推荐使用）
     /// - Parameter key: 实现了CodisKeyProtocol的配置枚举
     /// - Returns: 配置值，如果配置不存在则返回nil
-    public static func getConfig(with key: CodisKeyProtocol) -> CodisLimitType? {
-        return shared.config[key.key] as? CodisLimitType
+    public static func getConfig(with key: CodisKeyProtocol) -> CodisBasicLimit? {
+        return shared.config[key.key] as? CodisBasicLimit
     }
     
     /// 注册配置键类型到管理器中
@@ -115,7 +115,7 @@ public class CodisManager: ObservableObject {
             }
 
             // 从UserDefaults获取旧数据
-            if let oldValue = shared.defaults.object(forKey: key) as? CodisLimitType {
+            if let oldValue = shared.defaults.object(forKey: key) as? CodisBasicLimit {
                 shared.config[key] = oldValue
                 migratedCount += 1
             } else {
@@ -141,7 +141,7 @@ extension CodisManager {
     /// 监听指定key的配置变化
     /// - Parameter key: 配置key（协议类型）
     /// - Returns: 配置值的Publisher
-    public static func publisher<T: CodisLimitType>(for key: CodisKeyProtocol) -> AnyPublisher<T?, Never> {
+    public static func publisher<T: CodisBasicLimit>(for key: CodisKeyProtocol) -> AnyPublisher<T?, Never> {
         return shared.$config
             .map { config in
                 return config[key.key] as? T
