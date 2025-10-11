@@ -58,13 +58,25 @@ class ViewController: UIViewController {
             combineDisplayLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
         
+        // 测试会不会被关联响应
+        $user
+            .sink { value in
+                switch value {
+                case .some(let t):
+                    print("user 有值: \(t.name)")
+                case .none:
+                    print("user 为空")
+                }
+            }
+            .store(in: &cancellables)
+        
         $optionalUser
             .sink { value in
                 switch value {
                 case .some(let t):
-                    print("\(t?.name)")
+                    print("optionalUser 有值: \(t?.name)")
                 case .none:
-                    print("optionalUser为空")
+                    print("optionalUser 为空")
                 }
             }
             .store(in: &cancellables)
