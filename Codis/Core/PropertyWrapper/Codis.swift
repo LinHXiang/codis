@@ -31,12 +31,16 @@ public struct Codis<T: CodisBasicLimit>{
             if let value = CodisManager.getConfig(with: key) as? T {
                 return value
             }
-            // 如果没有设置值，使用key的默认值(基础数据类型必须赋值)
-            guard let defaultValue = key.defaultValue as? T else {
-                // 如果没有默认值，返回类型默认值（这不应该发生，因为协议要求有defaultValue）
-                fatalError("配置项 \(key.key) 没有提供默认值，请确保实现了CodisKeyProtocol的defaultValue属性")
+            // 如果没有设置值，使用key的默认值
+            if let defaultValue = key.defaultValue as? T {
+                return defaultValue
             }
-            return defaultValue
+            // 没有默认值则检查是否是可选类型,返回nil
+            if T.self is ExpressibleByNilLiteral.Type {
+                return unsafeBitCast(Optional<T>.none, to: T.self)
+            }
+            
+            fatalError("配置项 \(key.key) 没有提供默认值且不是可选类型，请检查")
         }
         set {
             switch newValue {
@@ -49,7 +53,7 @@ public struct Codis<T: CodisBasicLimit>{
 
             default:
 #if DEBUG
-            fatalError("⚠️ 未知类型: \(type(of: newValue))")
+                fatalError("⚠️ 未知类型: \(type(of: newValue))")
 #endif
             }
         }
