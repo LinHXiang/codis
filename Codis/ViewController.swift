@@ -74,12 +74,15 @@ class ViewController: UIViewController {
             .sink { value in
                 switch value {
                 case .some(let t):
+                    self.combineDisplayLabel.text = "optionalUser 有值: \(t?.name)"
                     print("optionalUser 有值: \(t?.name)")
                 case .none:
+                    self.combineDisplayLabel.text = "optionalUser 有nil"
                     print("optionalUser 为空")
                 }
             }
             .store(in: &cancellables)
+
     }
     
     // 按钮响应：呈现 Codis 配置页面
