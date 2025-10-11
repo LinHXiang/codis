@@ -7,11 +7,14 @@
 - **类型安全**: 使用 Swift 泛型和协议确保配置项的类型安全
 - **响应式编程**: 基于 Combine 框架，支持配置变化的实时监听
 - **线程安全**: 使用 NSLock 确保多线程环境下的安全访问
-- **属性包装器**: 通过 `@propertyWrapper` 提供简洁的配置访问语法
+- **属性包装器**: 通过统一的 `@Codis` 提供简洁的配置访问语法
 - **持久化存储**: 基于 UserDefaults 实现配置的本地持久化
 - **协议化设计**: 使用协议定义配置项，提高代码的可扩展性和可维护性
 - **自定义类型支持**: 支持复杂数据结构的配置存储，包括自定义类型和数组
 - **自动序列化**: 自定义类型自动进行JSON序列化和反序列化
+- **智能类型识别**: 统一接口自动处理基础类型、自定义类型、数组和可选类型
+- **nil值安全处理**: 正确识别和处理可选类型的nil值，支持无默认值配置
+- **写入性能优化**: 改进的可选类型处理和无默认值情况下的优化逻辑
 
 ## 版本要求说明
 
@@ -25,14 +28,13 @@ codis/
 ├── Core/                          # 核心框架代码
 │   ├── Protocols/                 # 协议定义层
 │   │   ├── CodisKeyProtocol.swift     # 配置键协议定义
-│   │   ├── CodisBasicLimit.swift       # 配置值类型协议
-│   │   └── CodisCustomLimitType.swift # 自定义类型协议
+│   │   ├── CodisBasicLimit.swift      # 基础类型协议
+│   │   ├── CodisLimit.swift           # 自定义类型协议（CodisBasicLimit + Codable）
+│   │   └── CodisCombineValue.swift    # Combine值包装器（解决nil值回调）
 │   ├── Manager/                   # 核心管理器
 │   │   └── CodisManager.swift     # 配置管理器（核心类）
 │   ├── PropertyWrapper/           # 属性包装器
-│   │   ├── Codis.swift           # @Codis 基础类型包装器
-│   │   ├── CodisCustom.swift     # @CodisCustom 自定义类型包装器
-│   │   └── CodisCustomArray.swift # @CodisCustomArray 自定义数组包装器
+│   │   └── Codis.swift           # @Codis 统一包装器（支持基础类型、自定义类型、数组）
 │   └── Views/                     # 视图组件
 │       └── CodisView.swift       # 配置管理视图
 ├── CodisKey.swift                 # 配置键枚举定义（示例实现）
@@ -62,28 +64,33 @@ func findKey(for keyString: String) -> CodisKeyProtocol?
 ```
 
 ### 2. 属性包装器
-提供多种属性包装器，支持不同类型配置的简洁访问：
+提供统一的 `@Codis` 属性包装器，智能支持所有类型配置的简洁访问：
 
-#### @Codis - 基础类型配置包装器
-用于基本数据类型（String, Int, Bool, Array, Dictionary等）：
+#### @Codis - 统一配置包装器
+智能识别并处理各种数据类型：
 ```swift
+// 基础数据类型（String, Int, Bool, Array, Dictionary等）
 @Codis(key: CodisKey.userChatInputType)
 var chatInputType: Int
-```
 
-#### @CodisCustom - 自定义类型配置包装器
-用于自定义类型，需遵循 `CodisCustomLimitType` 协议，支持自动序列化：
-```swift
-@CodisCustom(key: AppConfigKey.userSettings)
+// 自定义类型（自动JSON序列化）
+@Codis(key: AppConfigKey.userSettings)
 var userSettings: UserSettings?
+
+// 自定义类型数组（自动JSON序列化）
+@Codis(key: AppConfigKey.recentUsers)
+var recentUsers: [UserInfo]
+
+// 可选类型（正确处理nil值）
+@Codis(key: AppConfigKey.optionalConfig)
+var optionalConfig: String?
 ```
 
-#### @CodisCustomArray - 自定义类型数组配置包装器
-用于自定义类型数组，支持自动序列化：
-```swift
-@CodisCustomArray(key: AppConfigKey.recentUsers)
-var recentUsers: [UserInfo]
-```
+**智能类型处理机制：**
+- **基础类型**：直接存储到UserDefaults
+- **自定义类型**：自动进行JSON编码/解码
+- **数组类型**：支持基础类型和自定义类型数组
+- **可选类型**：正确处理nil值，支持无默认值配置
 
 ### 3. CodisKeyProtocol 协议
 配置键协议定义，任何遵循该协议的类型都可以作为配置键使用。项目中的 `CodisKey` 枚举只是实现示例，用于防止key字符串重复。
@@ -116,6 +123,9 @@ enum AppConfigKey: String, CodisKeyProtocol {
     case themeMode = "app_theme_mode"
     case fontSize = "app_font_size"
     case enableNotification = "app_enable_notification"
+    case userSettings = "app_user_settings"
+    case recentUsers = "app_recent_users"
+    case optionalConfig = "app_optional_config"
 
     var key: String { rawValue }
 
@@ -124,6 +134,9 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return "主题模式"
         case .fontSize: return "字体大小"
         case .enableNotification: return "启用通知"
+        case .userSettings: return "用户设置"
+        case .recentUsers: return "最近用户"
+        case .optionalConfig: return "可选配置"
         }
     }
 
@@ -136,6 +149,9 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return String.self
         case .fontSize: return Int.self
         case .enableNotification: return Bool.self
+        case .userSettings: return UserSettings.self
+        case .recentUsers: return [UserInfo].self
+        case .optionalConfig: return String?.self
         }
     }
 
@@ -144,6 +160,9 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return "light"
         case .fontSize: return 16
         case .enableNotification: return true
+        case .userSettings: return nil // 可以没有默认值
+        case .recentUsers: return [UserInfo]() // 默认为空数组
+        case .optionalConfig: return nil // 可选配置无默认值
         }
     }
 
@@ -152,17 +171,18 @@ enum AppConfigKey: String, CodisKeyProtocol {
     }
 }
 
-// 使用自定义配置键
+// 使用统一的 @Codis 包装器
 @Codis(key: AppConfigKey.themeMode)
 var themeMode: String
 
-// 使用自定义类型配置键
-@CodisCustom(key: AppConfigKey.userSettings)
+@Codis(key: AppConfigKey.userSettings)
 var userSettings: UserSettings?
 
-// 使用自定义类型数组配置键
-@CodisCustomArray(key: AppConfigKey.recentUsers)
+@Codis(key: AppConfigKey.recentUsers)
 var recentUsers: [UserInfo]
+
+@Codis(key: AppConfigKey.optionalConfig)
+var optionalConfig: String?
 ```
 
 ### 自定义类型配置支持
@@ -170,25 +190,25 @@ Codis 提供了完整的自定义类型配置支持，适用于复杂的数据�
 
 #### 1. 定义自定义类型
 ```swift
-// 自定义类型需要遵循 CodisCustomLimitType 协议
-struct UserSettings: CodisCustomLimitType {
+// 自定义类型只需遵循 CodisLimit 协议（CodisBasicLimit + Codable）
+struct UserSettings: CodisLimit {
     var userId: String
     var theme: String
     var notifications: Bool
 
     // 实现 CodisBasicLimit 协议
     var formatValue: String {
-        return "用户设置: \\((userId), 主题: \\((theme)"
+        return "用户设置: \(userId), 主题: \(theme)"
     }
 }
 
-struct UserInfo: CodisCustomLimitType {
+struct UserInfo: CodisLimit {
     let id: String
     let name: String
     let avatar: String?
 
     var formatValue: String {
-        return "用户: \\((name) (\\((id))"
+        return "用户: \(name) (\(id))"
     }
 }
 ```
@@ -199,6 +219,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
     case themeMode = "app_theme_mode"
     case userSettings = "app_user_settings"
     case recentUsers = "app_recent_users"
+    case optionalConfig = "app_optional_config"
 
     var key: String { rawValue }
 
@@ -207,6 +228,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return "主题模式"
         case .userSettings: return "用户设置"
         case .recentUsers: return "最近用户"
+        case .optionalConfig: return "可选配置"
         }
     }
 
@@ -218,6 +240,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return String.self
         case .userSettings: return UserSettings.self
         case .recentUsers: return [UserInfo].self
+        case .optionalConfig: return String?.self
         }
     }
 
@@ -226,6 +249,7 @@ enum AppConfigKey: String, CodisKeyProtocol {
         case .themeMode: return "light"
         case .userSettings: return nil // 可以没有默认值
         case .recentUsers: return [UserInfo]() // 默认为空数组
+        case .optionalConfig: return nil // 可选配置无默认值
         }
     }
 
@@ -235,14 +259,18 @@ enum AppConfigKey: String, CodisKeyProtocol {
 }
 ```
 
-#### 3. 使用自定义类型配置
+#### 3. 使用统一的 @Codis 包装器
 ```swift
 class UserProfileViewModel: ObservableObject {
-    @CodisCustom(key: AppConfigKey.userSettings)
+    // 统一的 @Codis 包装器支持所有类型
+    @Codis(key: AppConfigKey.userSettings)
     var userSettings: UserSettings?
 
-    @CodisCustomArray(key: AppConfigKey.recentUsers)
+    @Codis(key: AppConfigKey.recentUsers)
     var recentUsers: [UserInfo]
+
+    @Codis(key: AppConfigKey.optionalConfig)
+    var optionalConfig: String?
 
     func updateUserSettings(_ settings: UserSettings) {
         userSettings = settings // 自动序列化存储
@@ -260,7 +288,7 @@ class UserProfileViewModel: ObservableObject {
 #### 4. 监听自定义类型配置变化
 ```swift
 class SettingsViewModel: ObservableObject {
-    @CodisCustom(key: AppConfigKey.userSettings)
+    @Codis(key: AppConfigKey.userSettings)
     var userSettings: UserSettings?
 
     private var cancellables = Set<AnyCancellable>()
@@ -270,7 +298,7 @@ class SettingsViewModel: ObservableObject {
         $userSettings
             .sink { [weak self] newSettings in
                 if let settings = newSettings {
-                    print("用户设置已更新: \\((settings)")
+                    print("用户设置已更新: \(settings)")
                     self?.applySettings(settings)
                 }
             }
@@ -284,11 +312,12 @@ class SettingsViewModel: ObservableObject {
 ```
 
 **自定义类型配置特点**：
+- **统一接口**: 所有类型都使用 `@Codis` 包装器，简化使用
 - **自动序列化**: 使用JSON编解码，无需手动处理
 - **类型安全**: 编译时类型检查，避免运行时错误
 - **响应式支持**: 支持Combine监听配置变化
-- **数组支持**: 提供专门的数组包装器，支持自定义类型数组
-- **默认值处理**: 支持nil默认值和空数组默认值
+- **数组支持**: 原生支持自定义类型数组
+- **可选类型**: 正确处理nil值，支持无默认值配置
 
 ### 初始化配置管理器
 在应用启动时初始化 CodisManager 并注册配置键类型：
@@ -482,7 +511,8 @@ class ConfigViewController: UIViewController {
 ### 协议化设计
 - `CodisKeyProtocol`: 定义配置键的协议，任何遵循该协议的类型都可作为配置键
 - `CodisBasicLimit`: 定义配置值类型的协议，支持基本数据类型
-- `CodisCustomLimitType`: 定义自定义类型协议，支持复杂数据结构的自动序列化
+- `CodisLimit`: 统一的自定义类型协议（CodisBasicLimit + Codable），简化类型约束
+- `CodisCombineValue`: 解决Combine回调中nil值处理问题的包装器协议
 - 支持自定义配置类型，不依赖于具体的枚举实现
 
 **重要**: 项目中的 `CodisKey` 枚举只是协议的一个实现示例，用于演示如何使用枚举来避免key字符串重复。在实际项目中，你应该根据自己的需求创建自定义的配置键类型，只需遵循 `CodisKeyProtocol` 协议即可。
@@ -492,7 +522,27 @@ class ConfigViewController: UIViewController {
 - **灵活性**: `defaultValue` 为可选值，允许配置项没有默认值，适用于必须显式设置的配置
 - **运行时查找**: `find(keyString:)` 静态方法支持运行时的动态配置键查找
 - **扩展性**: 协议设计允许创建任意类型的配置键，不局限于枚举实现
-- **自定义类型支持**: 通过 `CodisCustomLimitType` 协议支持复杂数据结构的配置存储
+- **统一接口**: 通过 `CodisLimit` 协议，所有类型都使用相同的 `@Codis` 包装器
+- **智能类型识别**: 自动识别基础类型、自定义类型、数组和可选类型
+
+### 智能类型处理系统
+Codis采用统一的类型处理机制，通过协议组合实现智能类型识别：
+
+```swift
+// 统一的自定义类型协议
+public protocol CodisLimit: CodisBasicLimit, Codable { }
+
+// 自动为Optional和Array提供实现
+extension Optional: CodisLimit where Wrapped: CodisLimit { }
+extension Array: CodisLimit where Element: CodisLimit { }
+```
+
+**智能处理机制：**
+1. **基础类型识别**: String、Int、Bool等直接存储
+2. **自定义类型处理**: 遵循CodisLimit的自动JSON序列化
+3. **可选类型支持**: 使用Mirror反射正确识别和处理nil值
+4. **数组类型支持**: 基础类型数组和自定义类型数组都支持
+5. **类型安全检查**: 编译时确保类型安全，运行时自动选择处理方式
 
 ### 线程安全
 - 使用 `NSLock` 确保多线程安全
@@ -502,6 +552,54 @@ class ConfigViewController: UIViewController {
 - 基于 Combine 框架
 - 支持配置变化的实时监听
 - 提供带默认值的 Publisher
+- 解决Combine回调中的nil值处理问题
+
+### 架构优化与演进
+
+#### 统一接口设计
+最新版本将多个属性包装器（`@CodisCustom`、`@CodisCustomArray`）统一为单一的 `@Codis` 包装器，通过智能类型识别机制自动处理各种数据类型：
+
+```swift
+// 🎯 统一接口，简化使用
+@Codis(key: AppConfigKey.userSettings)
+var userSettings: UserSettings?
+
+@Codis(key: AppConfigKey.recentUsers)
+var recentUsers: [UserInfo]
+
+@Codis(key: AppConfigKey.themeMode)
+var themeMode: String
+```
+
+#### nil值处理优化
+改进了可选类型的处理逻辑，使用Mirror反射正确识别和处理nil值：
+- ✅ 支持无默认值的可选配置
+- ✅ 正确处理配置项的nil赋值
+- ✅ 安全的类型转换和错误处理
+- ✅ 改进的调试信息和错误提示
+
+#### 写入性能优化
+针对自定义类型和可选类型的写入操作进行了性能优化：
+- ✅ 减少不必要的类型检查
+- ✅ 优化可选类型的存储逻辑
+- ✅ 改进的JSON序列化性能
+- ✅ 更好的内存使用效率
+
+#### 协议体系简化
+将复杂的协议体系简化为更清晰的设计：
+```swift
+// 新的统一协议结构
+CodisKeyProtocol        // 配置键协议
+CodisBasicLimit        // 基础类型协议
+CodisLimit            // 统一自定义类型协议（CodisBasicLimit + Codable）
+CodisCombineValue      // Combine值包装器
+```
+
+这种架构演进带来了：
+- **更好的开发体验**: 单一接口，减少学习成本
+- **更强的类型安全**: 编译时检查，运行时保护
+- **更高的性能**: 优化的类型处理和存储逻辑
+- **更好的可维护性**: 简化的代码结构，易于扩展
 
 ## 安装要求
 
