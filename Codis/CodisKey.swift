@@ -14,6 +14,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
      
     case optionalUser = "optionalUser"
     
+    case userArray = "userArray"
+    
     // MARK: - CodisKeyProtocol 实现
 
     /// 获取key的字符串值
@@ -30,16 +32,15 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return "自定义类型User"
         case .optionalUser:
             return "可选自定义类型User"
+        case .userArray:
+            return "自定义类型User数组"
         }
     }
 
     /// 配置的详细说明，提供更完整的配置用途解释
     /// - Returns: 详细的配置功能描述
     var detail: String {
-        switch self {
-        case .user, .optionalUser:
-            return desc
-        }
+        return desc
     }
 
     /// 是否可以在UI中编辑，用于控制配置是否允许用户手动修改
@@ -53,6 +54,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
         switch self {
         case .user, .optionalUser:
             return User.self
+        case .userArray:
+            return [User].self
         }
     }
 
@@ -62,6 +65,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
         switch self {
         case .user, .optionalUser:
             return nil
+        case .userArray:
+            return []
         }
     }
 

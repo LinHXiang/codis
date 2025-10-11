@@ -18,6 +18,9 @@ class ViewController: UIViewController {
     
     @Codis(key: CodisKey.optionalUser)
     var optionalUser: User?
+    
+    @Codis(key: CodisKey.userArray)
+    var userArray: [User]
 
     // 新增：居中打开配置页面按钮
     private lazy var openConfigButton: UIButton = {
@@ -31,9 +34,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
-//        print(user.formatValue)
         
         // 添加并布局按钮到页面中央
         view.addSubview(openConfigButton)

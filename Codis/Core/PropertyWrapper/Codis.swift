@@ -61,10 +61,17 @@ public struct Codis<T: CodisBasicLimit>{
         return CodisManager.publisher(for: key)
     }
     
-    /// 自定义类型存储调用
+    // MARK: Set Method
     private func setCustomTypeWrappedValue(_ value: any CodisLimit) {
-        let canEncodeValue = value as Encodable
+        // 判断是否为nil值
+        let mirror = Mirror(reflecting: value)
+        if mirror.displayStyle == .optional, mirror.children.count == 0 {
+            CodisManager.updateConfig(with: key, value: nil)
+            return
+        }
+        // 非nil,编码存入
         do {
+            let canEncodeValue = value as Encodable
             let encode = try JSONEncoder().encode(canEncodeValue)
             CodisManager.updateConfig(with: key, value: encode)
         } catch {
