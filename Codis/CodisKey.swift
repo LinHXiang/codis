@@ -10,13 +10,9 @@ import Foundation
 /// Codis配置Key枚举，用于统一管理所有配置键，防止重复命名
 enum CodisKey: String, CaseIterable, CodisKeyProtocol {
 
-    case lastInstalledAppVersion = "LastInstalledAppVersion"
+    case user = "user"
      
-    case appStoreVersion = "AppStoreVersion"
-
-    case isFirstExperienceCount = "isFirstExperienceCount"
-    
-    case userChatInputType = "userChatInputType"
+    case optionalUser = "optionalUser"
     
     // MARK: - CodisKeyProtocol 实现
 
@@ -30,14 +26,10 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     /// - Returns: 用户友好的配置名称
     var desc: String {
         switch self {
-        case .lastInstalledAppVersion: 
-            return "上次安装app版本"
-        case .appStoreVersion: 
-            return "app store软件版本"
-        case .isFirstExperienceCount: 
-            return "首次体验流程次数"
-        case .userChatInputType:
-            return "用户输入方式缓存"
+        case .user:
+            return "自定义类型User"
+        case .optionalUser:
+            return "可选自定义类型User"
         }
     }
 
@@ -45,14 +37,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     /// - Returns: 详细的配置功能描述
     var detail: String {
         switch self {
-        case .lastInstalledAppVersion: 
-            return "上次安装app版本"
-        case .appStoreVersion:
-            return "缓存的App Store版本信息"
-        case .isFirstExperienceCount: 
-            return "首次体验(开场白+1,首次发送+1,首次发音+1),第四次则提示购买会员"
-        case .userChatInputType:
-            return "对话页面的输入方式: 0 = .voice, 1 = .keyboard"
+        case .user, .optionalUser:
+            return desc
         }
     }
 
@@ -65,10 +51,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     /// 数据类型 - 根据配置项返回对应的类型
     var dataType: CodisBasicLimit.Type {
         switch self {
-        case .lastInstalledAppVersion, .appStoreVersion:
-            return String.self
-        case .isFirstExperienceCount, .userChatInputType:
-            return Int.self
+        case .user, .optionalUser:
+            return User.self
         }
     }
 
@@ -76,14 +60,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
     /// - Returns: 配置的默认值，如果为nil则表示没有默认值
     var defaultValue: CodisBasicLimit? {
         switch self {
-        case .lastInstalledAppVersion:
-            return ""
-        case .appStoreVersion:
-            return ""
-        case .isFirstExperienceCount:
-            return 0
-        case .userChatInputType:
-            return 0
+        case .user, .optionalUser:
+            return nil
         }
     }
 

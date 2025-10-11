@@ -39,7 +39,19 @@ public struct Codis<T: CodisBasicLimit>{
             return defaultValue
         }
         set {
-            CodisManager.updateConfig(with: key, value: newValue)
+            switch newValue {
+            case let custom as any CodisLimit:
+                setCustomTypeWrappedValue(custom)
+
+            case let basic as any CodisBasicLimit:
+                // 基础类型
+                CodisManager.updateConfig(with: key, value: basic)
+
+            default:
+#if DEBUG
+            fatalError("⚠️ 未知类型: \(type(of: newValue))")
+#endif
+            }
         }
     }
     
@@ -47,5 +59,18 @@ public struct Codis<T: CodisBasicLimit>{
     /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
     public var projectedValue: AnyPublisher<T?, Never> {
         return CodisManager.publisher(for: key)
+    }
+    
+    /// 自定义类型存储调用
+    private func setCustomTypeWrappedValue(_ value: any CodisLimit) {
+        let canEncodeValue = value as Encodable
+        do {
+            let encode = try JSONEncoder().encode(canEncodeValue)
+            CodisManager.updateConfig(with: key, value: encode)
+        } catch {
+#if DEBUG
+            fatalError("自定义类型编码失败")
+#endif
+        }
     }
 }
