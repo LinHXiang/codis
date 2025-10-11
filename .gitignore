@@ -1,2 +1,5 @@
 .build
 .swiftpm
+.DS_Store
+*.xcuserstate
+codis.xcodeproj/xcuserdata/linhaoxiang.xcuserdatad/xcschemes/xcschememanagement.plist

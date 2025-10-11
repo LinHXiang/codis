@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		9D42F94A2E98976600998F0C /* codis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = codis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D42F94A2E98976600998F0C /* Codis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9D42F95C2E98976600998F0C /* Exceptions for "codis" folder in "codis" target */ = {
+		9D42F95C2E98976600998F0C /* Exceptions for "Codis" folder in "Codis" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 9D42F9492E98976600998F0C /* codis */;
+			target = 9D42F9492E98976600998F0C /* Codis */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9D42F94C2E98976600998F0C /* codis */ = {
+		9D42F94C2E98976600998F0C /* Codis */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				9D42F95C2E98976600998F0C /* Exceptions for "codis" folder in "codis" target */,
+				9D42F95C2E98976600998F0C /* Exceptions for "Codis" folder in "Codis" target */,
 			);
-			path = codis;
+			path = Codis;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		9D42F9412E98976600998F0C = {
 			isa = PBXGroup;
 			children = (
-				9D42F94C2E98976600998F0C /* codis */,
+				9D42F94C2E98976600998F0C /* Codis */,
 				9D42F94B2E98976600998F0C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		9D42F94B2E98976600998F0C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9D42F94A2E98976600998F0C /* codis.app */,
+				9D42F94A2E98976600998F0C /* Codis.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9D42F9492E98976600998F0C /* codis */ = {
+		9D42F9492E98976600998F0C /* Codis */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9D42F95D2E98976600998F0C /* Build configuration list for PBXNativeTarget "codis" */;
+			buildConfigurationList = 9D42F95D2E98976600998F0C /* Build configuration list for PBXNativeTarget "Codis" */;
 			buildPhases = (
 				9D42F9462E98976600998F0C /* Sources */,
 				9D42F9472E98976600998F0C /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9D42F94C2E98976600998F0C /* codis */,
+				9D42F94C2E98976600998F0C /* Codis */,
 			);
-			name = codis;
+			name = Codis;
 			packageProductDependencies = (
 			);
 			productName = codis;
-			productReference = 9D42F94A2E98976600998F0C /* codis.app */;
+			productReference = 9D42F94A2E98976600998F0C /* Codis.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9D42F9452E98976600998F0C /* Build configuration list for PBXProject "codis" */;
+			buildConfigurationList = 9D42F9452E98976600998F0C /* Build configuration list for PBXProject "Codis" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9D42F9492E98976600998F0C /* codis */,
+				9D42F9492E98976600998F0C /* Codis */,
 			);
 		};
 /* End PBXProject section */
@@ -318,7 +318,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9D42F9452E98976600998F0C /* Build configuration list for PBXProject "codis" */ = {
+		9D42F9452E98976600998F0C /* Build configuration list for PBXProject "Codis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9D42F9602E98976600998F0C /* Debug */,
@@ -327,7 +327,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9D42F95D2E98976600998F0C /* Build configuration list for PBXNativeTarget "codis" */ = {
+		9D42F95D2E98976600998F0C /* Build configuration list for PBXNativeTarget "Codis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9D42F95E2E98976600998F0C /* Debug */,
