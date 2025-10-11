@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 
 struct User: CodisLimit {
     var name: String = "你的名字"
@@ -32,24 +33,41 @@ class ViewController: UIViewController {
         return btn
     }()
     
+    // 检查响应式的显示label
+    private lazy var combineDisplayLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .black
+        return label
+    }()
+    
+    private var cancellables = Set<AnyCancellable>()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+                
         // 添加并布局按钮到页面中央
         view.addSubview(openConfigButton)
+        view.addSubview(combineDisplayLabel)
+
         NSLayoutConstraint.activate([
             openConfigButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            openConfigButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            openConfigButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            combineDisplayLabel.topAnchor.constraint(equalTo: openConfigButton.bottomAnchor, constant: 8),
+            combineDisplayLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
         
-        var user = User()
-        user.name = "用户1"
-        
-        var optionalUser = User()
-        optionalUser.name = "用户2"
-
-        self.user = user
-        self.optionalUser = optionalUser
+        $optionalUser
+            .sink { value in
+                switch value {
+                case .some(let t):
+                    print("\(t?.name)")
+                case .none:
+                    print("optionalUser为空")
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // 按钮响应：呈现 Codis 配置页面
@@ -58,6 +76,16 @@ class ViewController: UIViewController {
         let nav = UINavigationController(rootViewController: codisVC)
         nav.modalPresentationStyle = .pageSheet
         present(nav, animated: true, completion: nil)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        if optionalUser == nil {
+            optionalUser = User()
+        } else {
+            optionalUser = nil
+        }
     }
 }
 

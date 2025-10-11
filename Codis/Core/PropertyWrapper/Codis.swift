@@ -28,7 +28,7 @@ public struct Codis<T: CodisBasicLimit>{
     public var wrappedValue: T {
         get {
             // 优先从配置管理器获取值
-            if let value = CodisManager.getConfig(with: key) as? T {
+            if let value = getConfigValueFromManager() {
                 return value
             }
             // 如果没有设置值，使用key的默认值
@@ -46,11 +46,9 @@ public struct Codis<T: CodisBasicLimit>{
             switch newValue {
             case let custom as any CodisLimit:
                 setCustomTypeWrappedValue(custom)
-
             case let basic as any CodisBasicLimit:
                 // 基础类型
                 CodisManager.updateConfig(with: key, value: basic)
-
             default:
 #if DEBUG
                 fatalError("⚠️ 未知类型: \(type(of: newValue))")
@@ -59,13 +57,27 @@ public struct Codis<T: CodisBasicLimit>{
         }
     }
     
-    /// projectedValue 直接返回 CodisManager 的 Publisher
-    /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
-    public var projectedValue: AnyPublisher<T?, Never> {
-        return CodisManager.publisher(for: key)
+// MARK: Get Method
+    private func getConfigValueFromManager() -> T? {
+        // 没有找到K-V
+        guard let value = CodisManager.getConfig(with: key) else {
+            return nil
+        }
+        // 判断是否为nil值
+        let mirror = Mirror(reflecting: value)
+        if mirror.displayStyle == .optional, mirror.children.count == 0 {
+            return nil
+        }
+        // 检查是否自定义类型
+        if let data = value as? Data, key.dataType != Data.self, let decodableType = key.dataType as? Decodable.Type {
+            let decode = try? JSONDecoder().decode(decodableType, from: data)
+            return decode as? T
+        }
+        // 基础数据类型,直接转换返回
+        return value as? T
     }
     
-    // MARK: Set Method
+// MARK: Set Method
     private func setCustomTypeWrappedValue(_ value: any CodisLimit) {
         // 判断是否为nil值
         let mirror = Mirror(reflecting: value)
@@ -83,5 +95,12 @@ public struct Codis<T: CodisBasicLimit>{
             fatalError("自定义类型编码失败")
 #endif
         }
+    }
+    
+// MARK: Combine Support
+    /// projectedValue 直接返回 CodisManager 的 Publisher
+    /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
+    public var projectedValue: AnyPublisher<CodisCombineValue<T>, Never> {
+        return CodisManager.publisher(for: key)
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol CodisLimit: CodisBasicLimit, Codable, Equatable { }
+public protocol CodisLimit: CodisBasicLimit, Codable { }
 
 // MARK: 默认实现
 extension CodisLimit {

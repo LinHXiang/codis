@@ -103,7 +103,7 @@ public struct CodisView: View {
             }
 
             let displayValue: String
-            let originalValue: CodisBasicLimit?
+            let originalValue: (any CodisBasicLimit)?
 
             // 检查是否是自定义类型（存储为Data，但配置类型不是Data）
             if let customDataValue = value as? Data, configKey.dataType != Data.self {
@@ -111,7 +111,7 @@ public struct CodisView: View {
                     data: customDataValue,
                     expectedType: configKey.dataType
                 )
-            } else if let limitTypeValue = value as? CodisBasicLimit {
+            } else if let limitTypeValue = value as? (any CodisBasicLimit) {
                 // 基础类型，直接使用formatValue
                 displayValue = limitTypeValue.formatValue
                 originalValue = limitTypeValue
@@ -137,7 +137,7 @@ public struct CodisView: View {
     ///   - data: 存储的自定义类型数据
     ///   - expectedType: 期望的数据类型
     /// - Returns: 格式化后的显示字符串和原始值
-    private func formatCustomTypeValue(data: Data, expectedType: CodisBasicLimit.Type) -> (String, CodisBasicLimit?) {
+    private func formatCustomTypeValue(data: Data, expectedType: any CodisBasicLimit.Type) -> (String, (any CodisBasicLimit)?) {
         // 首先尝试解码数据，如果失败直接返回兜底信息
         guard let decodableType = expectedType as? Decodable.Type,
               let decodedModel = try? JSONDecoder().decode(decodableType, from: data) else {
@@ -151,7 +151,8 @@ public struct CodisView: View {
             if let jsonArray = jsonObject as? [Any] {
                 // 尝试将已解码的模型转换为自定义类型数组
                 if let decodedArray = decodedModel as? [any CodisLimit] {
-                    return ("自定义类型数组-数量:\(decodedArray.count)", jsonArray)
+                    let displayJsonArray = jsonArray as (any CodisBasicLimit)
+                    return ("自定义类型数组-数量:\(decodedArray.count)", displayJsonArray)
                 }
                 // 如果类型转换失败，显示基础数组信息
                 return ("自定义类型数组 (\(jsonArray.count)个元素)", data)
@@ -161,7 +162,8 @@ public struct CodisView: View {
             if let jsonDict = jsonObject as? [String: Any] {
                 // 尝试将已解码的模型转换为自定义类型
                 if let decodedModel = decodedModel as? (any CodisLimit) {
-                    return (decodedModel.formatValue, jsonDict)
+                    let displayJson = jsonDict as (any CodisBasicLimit)
+                    return (decodedModel.formatValue, displayJson)
                 }
                 // 如果类型转换失败，显示字典结构信息
                 return ("自定义类型数据 (\(jsonDict.count)个属性)", data)
@@ -184,7 +186,7 @@ struct CodisConfigDisplayItem: Identifiable {
     let id = UUID()
     let configKey: CodisKeyProtocol
     let currentValue: String
-    let originalValue: CodisBasicLimit?  // 保存原始值用于展开显示
+    let originalValue: (any CodisBasicLimit)?  // 保存原始值用于展开显示
 
     var desc: String { configKey.desc }
     var detail: String { configKey.detail }

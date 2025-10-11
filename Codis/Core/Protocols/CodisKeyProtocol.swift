@@ -23,10 +23,10 @@ public protocol CodisKeyProtocol {
     var canEdit: Bool { get }
 
     /// 数据类型
-    var dataType: CodisBasicLimit.Type { get }
+    var dataType: any CodisBasicLimit.Type { get }
     
     /// 配置默认值
-    var defaultValue: CodisBasicLimit? { get }
+    var defaultValue: (any CodisBasicLimit)? { get }
 
     /// 寻找配置键
     /// - Parameters:
