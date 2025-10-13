@@ -60,27 +60,15 @@ class ViewController: UIViewController {
         
         // 测试会不会被关联响应
         $user
-            .sink { value in
-                switch value {
-                case .some(let t):
-                    print("user 有值: \(t.name)")
-                case .none:
-                    print("user 为空")
-                }
+            .sink { user in
+                print("user : \(user)")
             }
             .store(in: &cancellables)
         
         $optionalUser
             .sink { value in
-                            
-                switch value {
-                case .some(let t):
-                    self.combineDisplayLabel.text = "optionalUser 有值: \(t?.name)"
-                    print("optionalUser 有值: \(t?.name)")
-                case .none:
-                    self.combineDisplayLabel.text = "optionalUser 有nil"
-                    print("optionalUser 为空")
-                }
+                print("optionalUser : \(value)")
+
             }
             .store(in: &cancellables)
 

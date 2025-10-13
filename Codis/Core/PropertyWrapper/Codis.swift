@@ -100,10 +100,16 @@ public struct Codis<T: CodisBasicLimit>{
     }
     
 // MARK: Combine Support
-    /// projectedValue 直接返回 CodisManager 的 Publisher
-    /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
-    public var projectedValue: AnyPublisher<CodisCombineValue<T>, Never> {
-        return CodisManager.publisher(for: key)
+    /// projectedValue 直接监听 config 变化，避免重复数据处理
+    /// 在 Codis 内部统一处理类型转换，提高效率
+    public var projectedValue: AnyPublisher<T, Never> {
+        return CodisManager.shared.$config
+            .compactMap { _ in
+                // 直接返回当前处理好的 wrappedValue
+                return self.wrappedValue
+            }
+            .removeDuplicates()
+            .eraseToAnyPublisher()
     }
 }
 
