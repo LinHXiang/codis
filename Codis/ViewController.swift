@@ -41,6 +41,15 @@ class ViewController: UIViewController {
         return label
     }()
     
+    private lazy var changeConfigButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("修改 Codis 配置", for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.addTarget(self, action: #selector(changeConfigButtonTapped), for: .touchUpInside)
+        return btn
+    }()
+    
     private var cancellables = Set<AnyCancellable>()
 
     override func viewDidLoad() {
@@ -49,13 +58,17 @@ class ViewController: UIViewController {
         // 添加并布局按钮到页面中央
         view.addSubview(openConfigButton)
         view.addSubview(combineDisplayLabel)
+        view.addSubview(changeConfigButton)
 
         NSLayoutConstraint.activate([
+            combineDisplayLabel.bottomAnchor.constraint(equalTo: openConfigButton.topAnchor, constant: -20),
+            combineDisplayLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
             openConfigButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             openConfigButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
-            combineDisplayLabel.topAnchor.constraint(equalTo: openConfigButton.bottomAnchor, constant: 8),
-            combineDisplayLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            changeConfigButton.topAnchor.constraint(equalTo: openConfigButton.bottomAnchor, constant: 20),
+            changeConfigButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
         
         // 测试会不会被关联响应
@@ -83,9 +96,8 @@ class ViewController: UIViewController {
         present(nav, animated: true, completion: nil)
     }
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        
+    @objc private func changeConfigButtonTapped() {
+
         if optionalUser == nil {
             optionalUser = User()
         } else {
