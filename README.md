@@ -2,6 +2,107 @@
 
 一个基于 Swift 的 iOS 本地配置管理框架，提供类型安全、响应式的配置管理解决方案。
 
+## 🔄 Codis 运行流程时序图
+
+```mermaid
+sequenceDiagram
+    participant App as 应用程序
+    participant CodisManager as Codis管理器
+    participant UserDefaults as UserDefaults
+    participant PropertyWrapper as @Codis包装器
+    participant Combine as Combine
+
+    Note over App: 应用启动阶段
+    App->>CodisManager: 初始化单例
+    CodisManager->>UserDefaults: 读取已保存配置
+    UserDefaults-->>CodisManager: 返回配置字典
+    CodisManager->>CodisManager: 更新内部config属性
+    App->>CodisManager: addKeyType(type: 配置键类型)
+
+    Note over App: 配置读取阶段
+    App->>PropertyWrapper: @Codis(key: 配置键)
+    PropertyWrapper->>PropertyWrapper: getWrappedValue()
+    PropertyWrapper->>CodisManager: 获取当前配置字典
+    CodisManager-->>PropertyWrapper: 返回config
+
+    alt 配置存在
+        PropertyWrapper->>PropertyWrapper: 类型检查和转换
+        PropertyWrapper-->>App: 返回配置值
+    else 配置不存在
+        PropertyWrapper->>PropertyWrapper: 返回默认值
+        PropertyWrapper-->>App: 返回默认值
+    end
+
+    Note over App: 配置写入阶段
+    App->>PropertyWrapper: wrappedValue = 新值
+    PropertyWrapper->>PropertyWrapper: 类型判断
+
+    alt 自定义类型
+        PropertyWrapper->>PropertyWrapper: JSON编码
+        PropertyWrapper->>CodisManager: updateConfig(key, 编码数据)
+    else 基础类型
+        PropertyWrapper->>CodisManager: updateConfig(key, 值)
+    end
+
+    CodisManager->>CodisManager: 线程安全锁
+    CodisManager->>CodisManager: 更新内部config
+    CodisManager->>UserDefaults: 持久化存储
+    CodisManager->>CodisManager: 释放锁
+    CodisManager->>Combine: 发布配置变化
+
+    Note over App: 配置监听阶段
+    App->>PropertyWrapper: $配置属性.sink
+    PropertyWrapper->>Combine: 订阅config变化
+    Combine-->>PropertyWrapper: 配置变化通知
+    PropertyWrapper->>PropertyWrapper: 重新计算值
+    PropertyWrapper-->>App: 返回新值
+
+    Note over App: 时序说明
+    Note right of CodisManager: 1. 单例模式，线程安全
+    Note right of PropertyWrapper: 2. 智能类型识别和处理
+    Note right of UserDefaults: 3. 配置持久化存储
+    Note right of Combine: 4. 响应式配置监听
+```
+
+## 📋 运行流程详细说明
+
+### 🚀 初始化阶段
+1. **CodisManager 单例创建**: 应用启动时自动创建单例，从 UserDefaults 加载已保存的配置
+2. **配置键类型注册**: 通过 `addKeyType()` 方法注册项目中使用的配置键类型
+3. **内部状态初始化**: 初始化配置字典和线程安全锁
+
+### 📖 配置读取流程
+1. **属性访问触发**: 通过 `@Codis` 包装的属性被访问时触发 getter
+2. **配置查找**: 从 CodisManager 获取当前配置字典
+3. **类型处理**:
+   - **基础类型**: 直接类型转换返回
+   - **自定义类型**: JSON 数据解码后返回
+   - **可选类型**: 使用 Mirror 反射正确处理 nil 值
+4. **默认值处理**: 配置不存在时返回 key 定义的默认值
+
+### ✏️ 配置写入流程
+1. **属性赋值触发**: 通过 `@Codis` 包装的属性被赋值时触发 setter
+2. **类型识别**: 判断是基础类型还是自定义类型
+3. **数据处理**:
+   - **基础类型**: 直接传递给 CodisManager
+   - **自定义类型**: JSON 编码后传递给 CodisManager
+4. **线程安全更新**: CodisManager 使用 NSLock 确保线程安全
+5. **持久化存储**: 更新 UserDefaults 并发布配置变化通知
+
+### 📡 配置监听流程
+1. **订阅建立**: 通过 `$属性名` 访问 projectedValue 建立 Combine 订阅
+2. **变化通知**: CodisManager 的 config 属性变化时触发通知
+3. **值重新计算**: 使用最新的配置字典重新计算属性值
+4. **重复值过滤**: 自动过滤重复值避免不必要的通知
+5. **回调触发**: 将处理后的值传递给订阅者
+
+### 🔧 关键技术特点
+- **类型安全**: 编译时类型检查 + 运行时类型验证
+- **线程安全**: NSLock 保证多线程环境下的安全访问
+- **智能类型识别**: 自动识别基础类型、自定义类型、可选类型
+- **响应式编程**: Combine 框架支持实时配置监听
+- **性能优化**: 避免重复数据处理，智能缓存机制
+
 ## 功能特性
 
 - **类型安全**: 使用 Swift 泛型和协议确保配置项的类型安全
