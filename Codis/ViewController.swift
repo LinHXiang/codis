@@ -14,13 +14,13 @@ struct User: CodisLimit {
 }
 
 class ViewController: UIViewController {
-    @Codis(key: CodisKey.user)
+    @Codis(key: CodisKey.user, defaultValue: User())
     var user: User
     
     @Codis(key: CodisKey.optionalUser)
     var optionalUser: User?
     
-    @Codis(key: CodisKey.userArray)
+    @Codis(key: CodisKey.userArray, defaultValue: [])
     var userArray: [User]
 
     // 新增：居中打开配置页面按钮
@@ -72,6 +72,7 @@ class ViewController: UIViewController {
         
         $optionalUser
             .sink { value in
+                            
                 switch value {
                 case .some(let t):
                     self.combineDisplayLabel.text = "optionalUser 有值: \(t?.name)"

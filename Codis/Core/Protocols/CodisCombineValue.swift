@@ -19,3 +19,15 @@ public enum CodisCombineValue<T: CodisBasicLimit>: Equatable {
     case none
 }
 
+struct CodisOptionalWrapper<T: CodisBasicLimit> {
+    
+    let defaultValue: T
+    
+    init(value: T) {
+        self.defaultValue = value
+    }
+    
+    init() where T: ExpressibleByNilLiteral {
+        self.defaultValue = nil
+    }
+}

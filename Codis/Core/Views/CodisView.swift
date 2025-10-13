@@ -102,16 +102,25 @@ public struct CodisView: View {
                 continue
             }
 
+            // 检查是否是自定义类型（存储为Data，先尝试传 字典或者数组）
+            if let customDataValue = value as? Data,
+                let customInfo = formatCustomTypeValue( data: customDataValue ) {
+                
+                let displayItem = CodisConfigDisplayItem(
+                    configKey: configKey,
+                    currentValue: customInfo.0,
+                    originalValue: customInfo.1
+                )
+
+                displayItems.append(displayItem)
+                
+                continue
+            }
+            
             let displayValue: String
             let originalValue: (any CodisBasicLimit)?
-
-            // 检查是否是自定义类型（存储为Data，但配置类型不是Data）
-            if let customDataValue = value as? Data, configKey.dataType != Data.self {
-                (displayValue, originalValue) = formatCustomTypeValue(
-                    data: customDataValue,
-                    expectedType: configKey.dataType
-                )
-            } else if let limitTypeValue = value as? (any CodisBasicLimit) {
+            
+            if let limitTypeValue = value as? (any CodisBasicLimit) {
                 // 基础类型，直接使用formatValue
                 displayValue = limitTypeValue.formatValue
                 originalValue = limitTypeValue
@@ -135,43 +144,25 @@ public struct CodisView: View {
     /// 格式化自定义类型的值
     /// - Parameters:
     ///   - data: 存储的自定义类型数据
-    ///   - expectedType: 期望的数据类型
     /// - Returns: 格式化后的显示字符串和原始值
-    private func formatCustomTypeValue(data: Data, expectedType: any CodisBasicLimit.Type) -> (String, (any CodisBasicLimit)?) {
-        // 首先尝试解码数据，如果失败直接返回兜底信息
-        guard let decodableType = expectedType as? Decodable.Type,
-              let decodedModel = try? JSONDecoder().decode(decodableType, from: data) else {
-            return ("自定义类型数据 (大小: \(data.count)字节)", nil)
-        }
-
+    private func formatCustomTypeValue(data: Data) -> (String, any CodisBasicLimit)? {
         // 分析JSON结构类型（数组 vs 字典）
         if let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) {
 
             // 情况1: JSON数组类型 - 自定义类型数组
             if let jsonArray = jsonObject as? [Any] {
                 // 尝试将已解码的模型转换为自定义类型数组
-                if let decodedArray = decodedModel as? [any CodisLimit] {
-                    let displayJsonArray = jsonArray as (any CodisBasicLimit)
-                    return ("自定义类型数组-数量:\(decodedArray.count)", displayJsonArray)
-                }
-                // 如果类型转换失败，显示基础数组信息
-                return ("自定义类型数组 (\(jsonArray.count)个元素)", data)
+                return ("自定义Model数组-数量:\(jsonArray.count)", jsonArray as (any CodisBasicLimit))
             }
 
             // 情况2: JSON字典类型 - 单个自定义模型
             if let jsonDict = jsonObject as? [String: Any] {
                 // 尝试将已解码的模型转换为自定义类型
-                if let decodedModel = decodedModel as? (any CodisLimit) {
-                    let displayJson = jsonDict as (any CodisBasicLimit)
-                    return (decodedModel.formatValue, displayJson)
-                }
-                // 如果类型转换失败，显示字典结构信息
-                return ("自定义类型数据 (\(jsonDict.count)个属性)", data)
+                return ("自定义Model: 点击查看详细内容", jsonDict as (any CodisBasicLimit))
             }
         }
-
-        // 情况3: 不是有效的JSON，返回通用描述
-        return ("自定义类型数据 (大小: \(data.count)字节)", data)
+        
+        return nil
     }
 
     /// 获取已设置的配置数量

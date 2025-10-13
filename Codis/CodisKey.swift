@@ -49,27 +49,6 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
         return false
     }
 
-    /// 数据类型 - 根据配置项返回对应的类型
-    var dataType: any CodisBasicLimit.Type {
-        switch self {
-        case .user, .optionalUser:
-            return User.self
-        case .userArray:
-            return [User].self
-        }
-    }
-
-    /// 配置默认值，用于在应用首次使用或重置时提供初始值
-    /// - Returns: 配置的默认值，如果为nil则表示没有默认值
-    var defaultValue: (any CodisBasicLimit)? {
-        switch self {
-        case .user, .optionalUser:
-            return nil
-        case .userArray:
-            return [User]()
-        }
-    }
-
     /// 根据字符串key查找对应的枚举值
     /// - Parameter keyString: 配置键的字符串标识符
     /// - Returns: 对应的枚举值，如果找不到则返回nil

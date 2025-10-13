@@ -149,11 +149,11 @@ extension CodisManager {
                 guard let value = config[key.key] else {
                     return .none
                 }
-                // 检查是否是自定义类型（存储为Data，但配置类型不是Data）
-                if let data = value as? Data, key.dataType != Data.self,
-                   let decodableType = key.dataType as? Decodable.Type,
-                   let decode = try? JSONDecoder().decode(decodableType, from: data) as? T {
-                    
+                // 检查是否是自定义类型
+                if let data = value as? Data, T.self is (any CodisLimit.Type), // 数据为data,但是T类型是CodisLimit,尝试解码
+                   let decodableType = T.self as? Decodable.Type, // 获取Decodable进行解码
+                    let decode = try? JSONDecoder().decode(decodableType, from: data) as? T {// 尝试解码
+
                     return .some(decode)
                 }
                 // 基础数据类型,直接转换返回
@@ -161,7 +161,6 @@ extension CodisManager {
                     return .some(basic)
                 }
                 
-                // unsafeBitCast(Optional<T>.none, to: T.self)
                 return .none
             }
             .removeDuplicates()

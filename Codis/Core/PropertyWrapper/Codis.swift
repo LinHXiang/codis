@@ -16,31 +16,28 @@ public struct Codis<T: CodisBasicLimit>{
     /// 配置的key值，用于唯一标识该配置项
     let key: CodisKeyProtocol
 
+    private let valueWrapper: CodisOptionalWrapper<T>
+    
     /// 使用协议枚举key初始化包装器
     /// - Parameter key: 实现了CodisKeyProtocol的配置枚举，必须提供defaultValue
-    public init(key: CodisKeyProtocol) {
+    public init(key: CodisKeyProtocol, defaultValue: T) {
         self.key = key
+        self.valueWrapper = CodisOptionalWrapper(value: defaultValue)
     }
 
+    /// 无参数初始化器，T必须是可选类型
+    /// - Parameter key: 实现了CodisKeyProtocol的配置枚举
+    public init(key: CodisKeyProtocol) where T: ExpressibleByNilLiteral {
+        self.key = key
+        self.valueWrapper = CodisOptionalWrapper<T>()
+    }
+    
     /// 包装值，提供getter和setter来存取配置
     /// getter：从配置管理器获取值，如果不存在则返回key的默认值
     /// setter：将新值保存到配置管理器
     public var wrappedValue: T {
         get {
-            // 优先从配置管理器获取值
-            if let value = getConfigValueFromManager() {
-                return value
-            }
-            // 如果没有设置值，使用key的默认值
-            if let defaultValue = key.defaultValue as? T {
-                return defaultValue
-            }
-            // 没有默认值则检查是否是可选类型,返回nil
-            if T.self is ExpressibleByNilLiteral.Type {
-                return unsafeBitCast(Optional<T>.none, to: T.self)
-            }
-            
-            fatalError("配置项 \(key.key) 没有提供默认值且不是可选类型，请检查")
+            getWrappedValue()
         }
         set {
             switch newValue {
@@ -58,23 +55,28 @@ public struct Codis<T: CodisBasicLimit>{
     }
     
 // MARK: Get Method
-    private func getConfigValueFromManager() -> T? {
+    private func getWrappedValue() -> T {
         // 没有找到K-V
         guard let value = CodisManager.getConfig(with: key) else {
-            return nil
+            return valueWrapper.defaultValue
         }
         // 判断是否为nil值
         let mirror = Mirror(reflecting: value)
         if mirror.displayStyle == .optional, mirror.children.count == 0 {
-            return nil
+            return valueWrapper.defaultValue
         }
         // 检查是否自定义类型
-        if let data = value as? Data, key.dataType != Data.self, let decodableType = key.dataType as? Decodable.Type {
-            let decode = try? JSONDecoder().decode(decodableType, from: data)
-            return decode as? T
+        if let data = value as? Data, T.self is (any CodisLimit.Type), // 数据为data,但是T类型是CodisLimit,尝试解码
+           let decodableType = T.self as? Decodable.Type, // 获取Decodable进行解码
+            let decode = try? JSONDecoder().decode(decodableType, from: data) as? T {// 尝试解码
+            return decode
         }
         // 基础数据类型,直接转换返回
-        return value as? T
+        if let basic = value as? T {
+            return basic
+        }
+        
+        return valueWrapper.defaultValue
     }
     
 // MARK: Set Method

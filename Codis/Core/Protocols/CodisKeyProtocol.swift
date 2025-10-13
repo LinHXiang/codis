@@ -21,16 +21,11 @@ public protocol CodisKeyProtocol {
 
     /// 是否可以在UI中编辑
     var canEdit: Bool { get }
-
-    /// 数据类型
-    var dataType: any CodisBasicLimit.Type { get }
     
-    /// 配置默认值
-    var defaultValue: (any CodisBasicLimit)? { get }
-
     /// 寻找配置键
     /// - Parameters:
     ///   - keyString: 配置键的字符串标识符
     /// - Returns: 找到的配置键
     static func find(keyString: String) -> Self?
 }
+
