@@ -29,7 +29,7 @@ public class CodisManager: ObservableObject {
     /// 当前配置数据的发布者，支持Combine响应式编程
     /// 当配置发生变化时，会自动通知所有订阅者
     @Published
-    var config: [String: Any] = [:]
+    private(set) var config: [String: Any] = [:]
     
     public static var config: [String: Any] {
         return shared.config

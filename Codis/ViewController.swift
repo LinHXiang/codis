@@ -68,6 +68,7 @@ class ViewController: UIViewController {
         $optionalUser
             .sink { value in
                 print("optionalUser : \(value)")
+                self.combineDisplayLabel.text = "optionalUser : \(value)"
 
             }
             .store(in: &cancellables)

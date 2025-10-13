@@ -55,9 +55,9 @@ public struct Codis<T: CodisBasicLimit>{
     }
     
 // MARK: Get Method
-    private func getWrappedValue() -> T {
+    private func getWrappedValue(_ configDict: [String: Any] = CodisManager.shared.config) -> T {
         // 没有找到K-V
-        guard let value = CodisManager.getConfig(with: key) else {
+        guard let value = configDict[key.key] else {
             return valueWrapper.defaultValue
         }
         // 判断是否为nil值
@@ -104,9 +104,8 @@ public struct Codis<T: CodisBasicLimit>{
     /// 在 Codis 内部统一处理类型转换，提高效率
     public var projectedValue: AnyPublisher<T, Never> {
         return CodisManager.shared.$config
-            .compactMap { _ in
-                // 直接返回当前处理好的 wrappedValue
-                return self.wrappedValue
+            .map { config in
+                return getWrappedValue(config)
             }
             .removeDuplicates()
             .eraseToAnyPublisher()

@@ -369,7 +369,9 @@ class ChatViewController: UIViewController {
 
 ### 监听配置变化
 
-#### 方式一：直接监听 CodisManager
+Codis 提供两种监听配置变化的方式，各有特点：
+
+#### 方式一：直接监听 CodisManager（老方法）
 ```swift
 class SettingsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
@@ -378,22 +380,26 @@ class SettingsViewModel: ObservableObject {
         // 监听配置变化（使用项目中定义的 CodisKey）
         CodisManager.publisher(for: CodisKey.userChatInputType)
             .sink { [weak self] newValue in
-                // 处理配置变化
-                self?.updateInputMode(newValue)
-            }
-            .store(in: &cancellables)
-
-        // 监听自定义配置变化（使用自定义的 AppConfigKey）
-        CodisManager.publisher(for: AppConfigKey.themeMode)
-            .sink { [weak self] newTheme in
-                self?.updateTheme(newTheme)
+                // ⚠️ 注意：这里需要进行 CodisCombineValue 解包
+                switch newValue {
+                case .some(let value):
+                    self?.updateInputMode(value)
+                case .none:
+                    print("配置值为 nil")
+                }
             }
             .store(in: &cancellables)
     }
 }
 ```
 
-#### 方式二：通过属性包装器监听（使用 projectedValue）
+**特点：**
+- ✅ 返回 `CodisCombineValue<T>` 类型，需要手动解包处理 nil 值
+- ✅ 适用于需要精细控制 nil 值处理的场景
+- ❌ 使用相对复杂，需要处理枚举解包
+- ❌ 存在重复数据处理（类型转换在 CodisManager 和 Codis 中各处理一次）
+
+#### 方式二：通过属性包装器监听（使用 projectedValue - 推荐）
 ```swift
 class ChatViewController: UIViewController {
     // 使用项目中定义的 CodisKey
@@ -412,7 +418,7 @@ class ChatViewController: UIViewController {
         // 监听输入方式变化（通过 $属性名 访问 projectedValue）
         $inputType
             .sink { [weak self] newValue in
-                // 监听配置变化，更新UI
+                // ✅ 直接获取处理好的值，无需解包
                 self?.updateInputMode(newValue)
             }
             .store(in: &cancellables)
@@ -436,6 +442,58 @@ class ChatViewController: UIViewController {
     func updateTheme(_ theme: String) {
         print("切换到主题: \(theme)")
         // 更新UI主题
+    }
+}
+```
+
+**特点：**
+- ✅ 返回直接的 `T` 类型，使用简单直观
+- ✅ 自动处理数据转换，避免重复处理，性能更好
+- ✅ 直接复用 `wrappedValue` 的类型转换逻辑
+- ✅ 代码更简洁，无需手动解包
+- ✅ 支持 `removeDuplicates()`，避免重复通知
+
+#### 两种监听方式对比
+
+| 特性 | 方式一：CodisManager.publisher | 方式二：projectedValue |
+|------|------------------------------|----------------------|
+| **返回值类型** | `CodisCombineValue<T>` | `T`（直接类型） |
+| **nil值处理** | 需要手动解包枚举 | 自动处理，直接获取值 |
+| **使用复杂度** | 较复杂（需要switch解包） | 简单（直接获取值） |
+| **数据处理** | 有重复处理 | 避免重复，性能更好 |
+| **重复通知过滤** | 有 | 有 |
+| **推荐程度** | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+
+**💡 使用建议：**
+- **新项目或重构**：强烈推荐使用方式二（projectedValue）
+- **老项目兼容**：可以继续使用方式一，但建议逐步迁移
+- **需要精细控制 nil 值**：可以使用方式一
+- **追求简洁高效**：选择方式二
+
+#### 监听可选类型配置
+```swift
+class OptionalConfigViewModel: ObservableObject {
+    @Codis(key: AppConfigKey.optionalConfig)
+    var optionalConfig: String?
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        // 监听可选类型配置变化
+        $optionalConfig
+            .sink { [weak self] newValue in
+                if let value = newValue {
+                    print("配置更新为: \(value)")
+                } else {
+                    print("配置被设置为 nil")
+                }
+                self?.handleConfigChange(newValue)
+            }
+            .store(in: &cancellables)
+    }
+
+    func handleConfigChange(_ config: String?) {
+        // 处理配置变化
     }
 }
 ```
