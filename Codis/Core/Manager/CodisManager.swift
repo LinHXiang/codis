@@ -117,6 +117,8 @@ public class CodisManager: ObservableObject {
             // 从UserDefaults获取旧数据
             if let oldValue = shared.defaults.object(forKey: key) as? (any CodisBasicLimit) {
                 shared.config[key] = oldValue
+                // 删除旧值,保证UserDefaults不会过大
+                shared.defaults.removeObject(forKey: key)
                 migratedCount += 1
             } else {
                 failedKeys.append(key)
