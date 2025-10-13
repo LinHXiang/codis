@@ -62,7 +62,6 @@ public class CodisManager: ObservableObject {
 
         // 持久化整个config字典
         shared.defaults.set(shared.config, forKey: configKey)
-        shared.defaults.synchronize()
     }
     
     /// 获取配置值，使用协议枚举key（推荐使用）
@@ -128,7 +127,6 @@ public class CodisManager: ObservableObject {
         // 保存迁移后的配置
         if migratedCount > 0 {
             shared.defaults.set(shared.config, forKey: configKey)
-            shared.defaults.synchronize()
         }
 
 #if DEBUG
