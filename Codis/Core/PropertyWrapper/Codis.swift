@@ -94,7 +94,7 @@ public struct Codis<T: CodisBasicLimit>{
             CodisManager.updateConfig(with: key, value: encode)
         } catch {
 #if DEBUG
-            fatalError("自定义类型编码失败")
+            fatalError("自定义类型编码失败:\(error)")
 #endif
         }
     }
@@ -104,5 +104,18 @@ public struct Codis<T: CodisBasicLimit>{
     /// 这样属性本身的变化会通过 CodisManager 广播给所有监听者
     public var projectedValue: AnyPublisher<CodisCombineValue<T>, Never> {
         return CodisManager.publisher(for: key)
+    }
+}
+
+fileprivate struct CodisOptionalWrapper<T: CodisBasicLimit> {
+    
+    let defaultValue: T
+    
+    init(value: T) {
+        self.defaultValue = value
+    }
+    
+    init() where T: ExpressibleByNilLiteral {
+        self.defaultValue = nil
     }
 }
