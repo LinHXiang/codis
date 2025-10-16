@@ -16,11 +16,12 @@ codis/
 │   │   ├── CodisKeyProtocol.swift     # 配置键协议定义
 │   │   ├── CodisBasicLimit.swift      # 基础类型协议
 │   │   ├── CodisLimit.swift           # 自定义类型协议（CodisBasicLimit + Codable）
+│   │   ├── CodisEnum.swift            # 枚举类型协议（支持RawRepresentable枚举）
 │   │   └── CodisCombineValue.swift    # Combine值包装器（解决nil值回调）
 │   ├── Manager/                   # 核心管理器
 │   │   └── CodisManager.swift     # 配置管理器（核心类）
 │   ├── PropertyWrapper/           # 属性包装器
-│   │   └── Codis.swift           # @Codis 统一包装器（支持基础类型、自定义类型、数组）
+│   │   └── Codis.swift           # @Codis 统一包装器（支持基础类型、自定义类型、数组、枚举）
 │   └── Views/                     # 视图组件
 │       └── CodisView.swift       # 配置管理视图
 ├── CodisKey.swift                 # 配置键枚举定义（示例实现）
@@ -128,6 +129,11 @@ var userSettings: UserSettings?
 @Codis(key: AppConfigKey.recentUsers, defaultValue: [])
 var recentUsers: [UserInfo]
 
+// 枚举类型（自动原始值存储）
+// 枚举类型需要设定默认值
+@Codis(key: AppConfigKey.themeMode, defaultValue: .auto)
+var theme: Theme
+
 ```
 
 **智能类型处理机制：**
@@ -135,6 +141,7 @@ var recentUsers: [UserInfo]
 - **自定义类型**：自动进行JSON编码/解码
 - **数组类型**：支持基础类型和自定义类型数组
 - **可选自定义类型**：正确处理nil值，支持无默认值配置
+- **枚举类型**：存储原始值，自动进行原始值与枚举的转换
 
 ### 3. CodisKeyProtocol 协议
 配置键协议定义，任何遵循该协议的类型都可以作为配置键使用。项目中的 `CodisKey` 枚举只是实现示例，用于防止key字符串重复。
@@ -147,6 +154,16 @@ var recentUsers: [UserInfo]
 - `find(keyString:)`: 静态方法，根据字符串key查找配置键实例
 
 位于 `Protocols/` 目录，是框架的规范层。
+
+### 4. CodisEnum 协议
+枚举支持协议，用于支持枚举类型的配置存储。枚举的原始值类型必须遵循 `CodisBasicLimit` 协议。
+
+协议要求：
+- 遵循 `CodisBasicLimit` 和 `RawRepresentable` 协议
+- `RawValue` 必须遵循 `CodisBasicLimit`
+- `_createEnum(from:)`: 静态方法，根据原始值创建枚举实例
+
+位于 `Protocols/CodisEnum.swift`，为枚举类型配置提供支持。
 
 **设计特点**：
 - 支持类型安全的配置键定义
@@ -309,13 +326,68 @@ class SettingsViewModel: ObservableObject {
 }
 ```
 
-**自定义类型配置特点**：
-- **统一接口**: 所有类型都使用 `@Codis` 包装器，简化使用
-- **自动序列化**: 使用JSON编解码，无需手动处理
-- **类型安全**: 编译时类型检查，避免运行时错误
-- **响应式支持**: 支持Combine监听配置变化
-- **数组支持**: 原生支持自定义类型数组
-- **可选类型**: 正确处理nil值，支持无默认值配置
+#### 5. 枚举类型配置支持
+Codis 支持枚举类型的配置存储，枚举的原始值类型可以是 `String`、`Int` 等基础类型：
+
+```swift
+// 定义枚举类型（原始值类型必须遵循CodisBasicLimit协议）
+enum Theme: String, CodisEnum, CaseIterable {
+    case light = "light"
+    case dark = "dark"
+    case auto = "auto"
+}
+
+enum UserRole: Int, CodisEnum, CaseIterable {
+    case guest = 0
+    case user = 1
+    case admin = 2
+}
+
+// 在配置键中添加枚举类型
+enum AppConfigKey: String, CodisKeyProtocol {
+    case themeMode = "app_theme_mode"
+    case userRole = "app_user_role"
+
+    var key: String { rawValue }
+
+    var desc: String {
+        switch self {
+        case .themeMode: return "主题模式"
+        case .userRole: return "用户角色"
+        }
+    }
+
+    var detail: String { desc }
+    var canEdit: Bool { true }
+
+    static func find(keyString: String) -> AppConfigKey? {
+        return AppConfigKey(rawValue: keyString)
+    }
+}
+
+// 使用 @Codis 包装器存储枚举类型
+class SettingsViewModel: ObservableObject {
+    @Codis(key: AppConfigKey.themeMode, defaultValue: .auto)
+    var theme: Theme
+
+    @Codis(key: AppConfigKey.userRole, defaultValue: .guest)
+    var userRole: UserRole
+
+    func toggleTheme() {
+        let allThemes = Theme.allCases
+        if let currentIndex = allThemes.firstIndex(of: theme) {
+            let nextIndex = (currentIndex + 1) % allThemes.count
+            theme = allThemes[nextIndex]  // 自动存储原始值
+        }
+    }
+}
+```
+
+**枚举类型配置特点**：
+- **原始值存储**: 枚举值以其原始值形式存储，便于阅读和调试
+- **类型安全**: 编译时检查枚举类型，避免无效值
+- **自动转换**: 读取时自动从原始值转换回枚举实例
+- **支持所有基础原始值**: 支持 `String`、`Int` 等作为原始值类型
 
 ### 初始化配置管理器
 在应用启动时初始化 CodisManager 并注册配置键类型：
