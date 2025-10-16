@@ -11,11 +11,13 @@ import Foundation
 enum CodisKey: String, CaseIterable, CodisKeyProtocol {
 
     case user = "user"
-     
+
     case optionalUser = "optionalUser"
-    
+
     case userArray = "userArray"
-    
+
+    case theme = "theme"
+
     // MARK: - CodisKeyProtocol 实现
 
     /// 获取key的字符串值
@@ -34,6 +36,8 @@ enum CodisKey: String, CaseIterable, CodisKeyProtocol {
             return "可选自定义类型User"
         case .userArray:
             return "自定义类型User数组"
+        case .theme:
+            return "主题模式"
         }
     }
 

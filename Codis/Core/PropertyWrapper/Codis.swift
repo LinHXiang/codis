@@ -43,6 +43,9 @@ public struct Codis<T: CodisBasicLimit>{
             switch newValue {
             case let custom as any CodisLimit:
                 setCustomTypeWrappedValue(custom)
+            case let enumValue as any CodisEnum:
+                // 枚举类型 - 存储原始值
+                setRawRepresentableWrappedValue(enumValue)
             case let basic as any CodisBasicLimit:
                 // 基础类型
                 CodisManager.updateConfig(with: key, value: basic)
@@ -65,6 +68,15 @@ public struct Codis<T: CodisBasicLimit>{
         if mirror.displayStyle == .optional, mirror.children.count == 0 {
             return valueWrapper.defaultValue
         }
+
+        // 检查是否枚举
+        if let enumType = T.self as? any CodisEnum.Type {
+            if let rawValue = value as? (any CodisBasicLimit),
+               let converted = enumType._createEnum(from: rawValue) as? T {
+                return converted
+            }
+        }
+        
         // 检查是否自定义类型
         if let data = value as? Data, T.self is (any CodisLimit.Type), // 数据为data,但是T类型是CodisLimit,尝试解码
            let decodableType = T.self as? Decodable.Type, // 获取Decodable进行解码
@@ -75,11 +87,12 @@ public struct Codis<T: CodisBasicLimit>{
         if let basic = value as? T {
             return basic
         }
-        
+
         return valueWrapper.defaultValue
     }
     
 // MARK: Set Method
+    /// 自定义类型处理
     private func setCustomTypeWrappedValue(_ value: any CodisLimit) {
         // 判断是否为nil值
         let mirror = Mirror(reflecting: value)
@@ -98,6 +111,13 @@ public struct Codis<T: CodisBasicLimit>{
 #endif
         }
     }
+    /// 枚举处理
+    private func setRawRepresentableWrappedValue(_ value: any CodisEnum) {
+        // 确保原始值遵循CodisBasicLimit协议
+        let basicValue = value.rawValue
+        CodisManager.updateConfig(with: key, value: basicValue)
+    }
+
     
 // MARK: Combine Support
     /// projectedValue 直接监听 config 变化，避免重复数据处理
