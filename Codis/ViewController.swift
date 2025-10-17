@@ -33,7 +33,7 @@ class ViewController: UIViewController {
     var userArray: [User]
 
     // 枚举测试属性
-    @Codis(key: CodisKey.theme, defaultValue: [.auto])
+    @Codis(key: CodisKey.theme, defaultValue: [])
     var theme: [Theme]
 
     // 新增：居中打开配置页面按钮

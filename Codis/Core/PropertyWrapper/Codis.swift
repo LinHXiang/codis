@@ -83,19 +83,19 @@ public struct Codis<T: CodisBasicLimit>{
         }
 
         // 检查是否枚举数组
-        let defaultValueMirror = Mirror(reflecting: valueWrapper.defaultValue)
-        if defaultValueMirror.displayStyle == .collection,
-           let firstElement = defaultValueMirror.children.first?.value as? any CodisEnum,
-           let nsArray = value as? NSArray {
-            // 默认值是枚举数组，获取第一个元素的类型
-            let enumType = type(of: firstElement)
-            let enumArray = nsArray.compactMap { element in
-                if let basicElement = element as? any CodisBasicLimit {
-                    return enumType._createEnum(from: basicElement)
+        if let nsArray = value as? NSArray, // config对于枚举数组,存入的是nsarray
+           let arrayType = T.self as? any SequenceElementExtractable.Type, // 用辅助协议,方便提取实际类型
+           let elementType = arrayType.elementType as? any CodisEnum.Type { // 获取元素类型用于转换
+            
+            // 尝试转成T,成功则返回,否则返回默认值
+            let converted:[any CodisEnum] = nsArray.compactMap({ raw in
+                guard let limit = raw as? any CodisBasicLimit else {
+                    return nil
                 }
-                return nil
-            }
-            if let result = enumArray as? T {
+                return elementType._createEnum(from: limit)
+            })
+                        
+            if let result = converted as? T {
                 return result
             }
         }
@@ -165,5 +165,18 @@ fileprivate struct CodisOptionalWrapper<T: CodisBasicLimit> {
     
     init() where T: ExpressibleByNilLiteral {
         self.defaultValue = nil
+    }
+}
+
+// 定义一个协议来提取元素类型
+fileprivate protocol SequenceElementExtractable {
+    associatedtype Element
+    static var elementType: Element.Type { get }
+}
+
+// 为数组实现协议
+extension Array: SequenceElementExtractable {
+    static var elementType: Element.Type {
+        return Element.self
     }
 }
