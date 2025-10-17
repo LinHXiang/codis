@@ -33,8 +33,8 @@ class ViewController: UIViewController {
     var userArray: [User]
 
     // 枚举测试属性
-    @Codis(key: CodisKey.theme, defaultValue: .auto)
-    var theme: Theme
+    @Codis(key: CodisKey.theme, defaultValue: [.auto])
+    var theme: [Theme]
 
     // 新增：居中打开配置页面按钮
     private lazy var openConfigButton: UIButton = {
@@ -123,13 +123,7 @@ class ViewController: UIViewController {
 //        }
 //        
         // 测试切换枚举值
-        let allThemes = Theme.allCases
-        if let currentIndex = allThemes.firstIndex(of: theme) {
-            let nextIndex = (currentIndex + 1) % allThemes.count
-            theme = allThemes[nextIndex]
-            print("切换后主题: \(theme)")
-            print("切换后主题原始值: \(theme.rawValue)")
-        }
+        theme = Theme.allCases
     }
 
 }

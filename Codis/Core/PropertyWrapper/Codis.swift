@@ -46,6 +46,11 @@ public struct Codis<T: CodisBasicLimit>{
             case let enumValue as any CodisEnum:
                 // 枚举类型 - 存储原始值
                 setRawRepresentableWrappedValue(enumValue)
+            case let enumArray as [any CodisEnum]:
+                // 枚举类型数组 - 转换为NSArray存储以解决Equatable问题
+                let enumRawArray = enumArray.map({ $0.rawValue })
+                let nsArray = NSArray(array: enumRawArray)
+                CodisManager.updateConfig(with: key, value: nsArray)
             case let basic as any CodisBasicLimit:
                 // 基础类型
                 CodisManager.updateConfig(with: key, value: basic)
@@ -74,6 +79,24 @@ public struct Codis<T: CodisBasicLimit>{
             if let rawValue = value as? (any CodisBasicLimit),
                let converted = enumType._createEnum(from: rawValue) as? T {
                 return converted
+            }
+        }
+
+        // 检查是否枚举数组
+        let defaultValueMirror = Mirror(reflecting: valueWrapper.defaultValue)
+        if defaultValueMirror.displayStyle == .collection,
+           let firstElement = defaultValueMirror.children.first?.value as? any CodisEnum,
+           let nsArray = value as? NSArray {
+            // 默认值是枚举数组，获取第一个元素的类型
+            let enumType = type(of: firstElement)
+            let enumArray = nsArray.compactMap { element in
+                if let basicElement = element as? any CodisBasicLimit {
+                    return enumType._createEnum(from: basicElement)
+                }
+                return nil
+            }
+            if let result = enumArray as? T {
+                return result
             }
         }
         
