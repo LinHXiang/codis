@@ -11,7 +11,7 @@ public protocol CodisEnum: CodisBasicLimit, RawRepresentable where RawValue: Cod
     static func _createEnum(from rawValue: any CodisBasicLimit) -> Self?
 }
 
-extension CodisEnum {
+public extension CodisEnum {
     var formatValue: String {
         return "自定义枚举"
     }
